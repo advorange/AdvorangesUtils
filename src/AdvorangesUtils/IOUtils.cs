@@ -11,18 +11,16 @@ using System.Text.RegularExpressions;
 namespace AdvorangesUtils
 {
 	/// <summary>
-	/// Actions involving saving and loading.
+	/// Actions involving saving and loading or memory.
 	/// </summary>
 	public static class IOUtils
 	{
-		//Has to be manually set, but that shouldn't be a problem since the break would have been manually created anyways
-		public static JsonFix[] Fixes = new JsonFix[0];
 		private static JsonSerializerSettings _DefaultSerializingSettings = GenerateDefaultSerializerSettings();
 
 		/// <summary>
-		/// Returns the <see cref="Process.WorkingSet64"/> value divided by a MB.
+		/// Returns the <see cref="Process.PrivateMemorySize64"/> value divided by a MB.
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>The amount of private memory in MBs.</returns>
 		public static double GetMemory()
 		{
 			using (var process = Process.GetCurrentProcess())
@@ -49,8 +47,8 @@ namespace AdvorangesUtils
 		/// <summary>
 		/// Creates a file if it does not already exist, then writes over it.
 		/// </summary>
-		/// <param name="fileInfo"></param>
-		/// <param name="text"></param>
+		/// <param name="fileInfo">The file to overwrite.</param>
+		/// <param name="text">The text to write.</param>
 		public static void OverwriteFile(FileInfo fileInfo, string text)
 		{
 			File.WriteAllText(fileInfo.FullName, text);
@@ -58,9 +56,9 @@ namespace AdvorangesUtils
 		/// <summary>
 		/// Converts the object to json.
 		/// </summary>
-		/// <param name="obj"></param>
-		/// <param name="settings"></param>
-		/// <returns></returns>
+		/// <param name="obj">The object to serialize.</param>
+		/// <param name="settings">The json settings to use. If null, uses settings that parse enums as strings and ignores errors.</param>
+		/// <returns>The serialized object.</returns>
 		public static string Serialize(object obj, JsonSerializerSettings settings = null)
 		{
 			return JsonConvert.SerializeObject(obj, Newtonsoft.Json.Formatting.Indented, settings ?? _DefaultSerializingSettings);
@@ -68,28 +66,35 @@ namespace AdvorangesUtils
 		/// <summary>
 		/// Creates an object of type <typeparamref name="T"/> with the supplied string and type.
 		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="value"></param>
-		/// <param name="type"></param>
-		/// <param name="settings"></param>
-		/// <returns></returns>
-		public static T Deserialize<T>(string value, Type type, JsonSerializerSettings settings = null)
+		/// <typeparam name="T">The general type to deserialize. Can be an abstraction of <paramref name="type"/> but has to be a type where it can be converted to <typeparamref name="T"/>.</typeparam>
+		/// <param name="value">The text to deserialize.</param>
+		/// <param name="type">The explicit type of object to create.</param>
+		/// <param name="settings">The json settings to use. If null, uses settings that parse enums as strings and ignores errors.</param>
+		/// <param name="fixes">Fixes for Json with errors.</param>
+		/// <returns>The value put into an object.</returns>
+		public static T Deserialize<T>(string value, Type type, JsonSerializerSettings settings = null, JsonFix[] fixes = null)
 		{
-			//Only use fixes specified for the class
-			var fixes = Fixes.Where(f => f.Type == type || f.Type.IsAssignableFrom(type));
-			if (fixes.Any())
+			//If no fixes then deserialize normally
+			if (fixes == null)
 			{
-				var jObject = JObject.Parse(value);
-				foreach (var fix in fixes)
-				{
-					if (jObject.SelectToken(fix.Path)?.Parent is JProperty jProp && fix.ErrorValues.Any(x => x.IsMatch(jProp.Value.ToString())))
-					{
-						jProp.Value = fix.NewValue;
-					}
-				}
-				value = jObject.ToString();
+				return (T)JsonConvert.DeserializeObject(value, type, settings ?? _DefaultSerializingSettings);
 			}
-			return (T)JsonConvert.DeserializeObject(value, type, settings ?? _DefaultSerializingSettings);
+			//Only use fixes specified for the class
+			var typeFixes = fixes.Where(f => f.Type == type || f.Type.IsAssignableFrom(type));
+			if (!typeFixes.Any())
+			{
+				return (T)JsonConvert.DeserializeObject(value, type, settings ?? _DefaultSerializingSettings);
+			}
+
+			var jObj = JObject.Parse(value);
+			foreach (var fix in typeFixes)
+			{
+				if (jObj.SelectToken(fix.Path)?.Parent is JProperty jProp && fix.ErrorValues.Any(x => x.IsMatch(jProp.Value.ToString())))
+				{
+					jProp.Value = fix.NewValue;
+				}
+			}
+			return (T)JsonConvert.DeserializeObject(jObj.ToString(), type, settings ?? _DefaultSerializingSettings);
 		}
 		/// <summary>
 		/// Creates an object from json stored in a file.
@@ -99,21 +104,17 @@ namespace AdvorangesUtils
 		/// <param name="file">The file to read from.</param>
 		/// <param name="type">The explicit type of object to create.</param>
 		/// <param name="settings">The json settings to use. If null, uses settings that parse enums as strings and ignores errors.</param>
-		/// <param name="create">If true, unable to deserialize an object from the file, and the type has a parameterless constructor, then uses that constructor.</param>
-		/// <param name="callback">An action to do after the object has been deserialized.</param>
-		/// <returns></returns>
-		public static T DeserializeFromFile<T>(FileInfo file, Type type, bool create = false, JsonSerializerSettings settings = null)
+		/// <param name="fixes">Fixes for Json with errors.</param>
+		/// <returns>The file's text put into the object, or, if deserialization failed, default.</returns>
+		public static T DeserializeFromFile<T>(FileInfo file, Type type, JsonSerializerSettings settings = null, JsonFix[] fixes = null) where T : new()
 		{
-			T obj = default;
-			var isDefault = true;
 			if (file.Exists)
 			{
 				try
 				{
 					using (var reader = new StreamReader(file.FullName))
 					{
-						obj = Deserialize<T>(reader.ReadToEnd(), type, settings ?? _DefaultSerializingSettings);
-						isDefault = false;
+						return Deserialize<T>(reader.ReadToEnd(), type, settings ?? _DefaultSerializingSettings);
 					}
 				}
 				catch (JsonReaderException jre)
@@ -121,9 +122,7 @@ namespace AdvorangesUtils
 					jre.Write();
 				}
 			}
-			//Create obj is still default and parameterless constructor exists
-			return create && isDefault && type.GetConstructors().Any(x => !x.GetParameters().Any())
-				? (T)Activator.CreateInstance(type) : obj;
+			return new T();
 		}
 		/// <summary>
 		/// Generates json serializer settings which ignore most errors, and has a string enum converter.
@@ -144,9 +143,9 @@ namespace AdvorangesUtils
 			};
 		}
 		/// <summary>
-		/// Writes an uncaught exception to a log file.
+		/// Writes an uncaught exception to a log file in the current directory.
 		/// </summary>
-		/// <param name="exception"></param>
+		/// <param name="exception">The exception.</param>
 		public static void LogUncaughtException(object exception)
 		{
 			var file = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "CrashLog.txt"));

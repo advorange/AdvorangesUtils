@@ -37,7 +37,8 @@ namespace AdvorangesUtils
 		/// Utilizes <see cref="SHFileOperation(ref SHFILEOPSTRUCT)"/> to move a file to the recycle bin with undo preservation and no confirmation.
 		/// If invoked on non windows, will simply delete the file.
 		/// </summary>
-		/// <param name="file"></param>
+		/// <param name="file">The file to delete.</param>
+		/// <returns>The error code gotten from moving the file. 0 indicates success.</returns>
 		public static int MoveFile(FileInfo file)
 		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -51,7 +52,8 @@ namespace AdvorangesUtils
 		/// Utilizes <see cref="SHFileOperation(ref SHFILEOPSTRUCT)"/> to move multiple files to the recycle bin with undo preservation and no confirmation.
 		/// If invoked on non windows, will simply delete the file.
 		/// </summary>
-		/// <param name="files"></param>
+		/// <param name="files">The files to delete.</param>
+		/// <returns>The error code gotten from moving the file. 0 indicates success.</returns>
 		public static int MoveFiles(IEnumerable<FileInfo> files)
 		{
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
