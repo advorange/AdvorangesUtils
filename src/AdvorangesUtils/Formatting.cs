@@ -27,7 +27,7 @@ namespace AdvorangesUtils
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="values">The values to put into a numbered list.</param>
-		/// <param name="format">How to format each entry.</param>
+		/// <param name="func">How to format each entry.</param>
 		/// <returns>A numbered list of objects formatted in the supplied way.</returns>
 		public static string FormatNumberedList<T>(this IEnumerable<T> values, Func<T, string> func)
 		{
@@ -134,7 +134,7 @@ namespace AdvorangesUtils
 		/// </summary>
 		/// <param name="dt">The datetime to format.</param>
 		/// <returns>Formatted string that says when something was created with markdown.</returns>
-		public static string ToCreatedAt(this DateTime dt, bool withMarkdown = true)
+		public static string ToCreatedAt(this DateTime dt)
 		{
 			var diff = DateTime.UtcNow.Subtract(dt).TotalDays;
 			return $"**Created:** `{ToReadable(dt)}` (`{diff:0.00}` days ago)";

@@ -14,6 +14,7 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <LangVersion>latest</LangVersion>
+    <DocumentationFile>bin\Release\netstandard2.0\AdvorangesUtils.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

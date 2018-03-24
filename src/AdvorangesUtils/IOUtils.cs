@@ -158,11 +158,26 @@ namespace AdvorangesUtils
 			ConsoleUtils.WriteLine($"Something has gone drastically wrong. Check {file} for more details.", ConsoleColor.Red);
 		}
 
+		/// <summary>
+		/// A fix to an invalid value in Json.
+		/// </summary>
 		public struct JsonFix
 		{
+			/// <summary>
+			/// The type to apply this fix to.
+			/// </summary>
 			public Type Type;
+			/// <summary>
+			/// The Json path to the value.
+			/// </summary>
 			public string Path;
+			/// <summary>
+			/// Regex for checking if any values are invalid.
+			/// </summary>
 			public Regex[] ErrorValues;
+			/// <summary>
+			/// The value to replace with.
+			/// </summary>
 			public string NewValue;
 		}
 	}

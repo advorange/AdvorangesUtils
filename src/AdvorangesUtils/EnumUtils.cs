@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace AdvorangesUtils
 {
+	/// <summary>
+	/// Utilities for getting the flags of an enum.
+	/// </summary>
 	public static class EnumUtils
 	{
 		/// <summary>
@@ -87,7 +90,7 @@ namespace AdvorangesUtils
 		/// </summary>
 		/// <typeparam name="TEnum">The enum to parse.</typeparam>
 		/// <param name="input">The input names.</param>
-		/// <param name="value">The valid enums.</param>
+		/// <param name="validInput">The valid enums.</param>
 		/// <param name="invalidInput">The invalid names.</param>
 		/// <returns>A boolean indicating if there were any failed parses.</returns>
 		/// <exception cref="ArgumentException">When <typeparamref name="TEnum"/> is not an enum.</exception>

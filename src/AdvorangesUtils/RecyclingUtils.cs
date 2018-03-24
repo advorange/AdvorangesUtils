@@ -12,7 +12,7 @@ namespace AdvorangesUtils
 	public static class RecyclingUtils
 	{
 		[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 1)]
-		public struct SHFILEOPSTRUCT
+		private struct SHFILEOPSTRUCT
 		{
 			public IntPtr hwnd;
 			[MarshalAs(UnmanagedType.U4)]
@@ -27,11 +27,11 @@ namespace AdvorangesUtils
 		}
 
 		[DllImport("shell32.dll", CharSet = CharSet.Auto)]
-		public static extern int SHFileOperation(ref SHFILEOPSTRUCT FileOp);
+		private static extern int SHFileOperation(ref SHFILEOPSTRUCT FileOp);
 
-		public const int FO_DELETE = 3;
-		public const int FOF_ALLOWUNDO = 0x40;
-		public const int FOF_NOCONFIRMATION = 0x10; //Don't prompt the user
+		private const int FO_DELETE = 3;
+		private const int FOF_ALLOWUNDO = 0x40;
+		private const int FOF_NOCONFIRMATION = 0x10; //Don't prompt the user
 
 		/// <summary>
 		/// Utilizes <see cref="SHFileOperation(ref SHFILEOPSTRUCT)"/> to move a file to the recycle bin with undo preservation and no confirmation.
