@@ -6,7 +6,7 @@
     <Description>Utilities for things I'm writing.</Description>
     <RepositoryUrl>https://github.com/advorange/AdvorangesUtils</RepositoryUrl>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
