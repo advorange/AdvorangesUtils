@@ -40,11 +40,11 @@ namespace AdvorangesUtils
 		/// </summary>
 		/// <param name="source"></param>
 		/// <param name="search"></param>
-		/// <param name="position"></param>
+		/// <param name="index"></param>
 		/// <returns></returns>
-		public static bool CaseInsIndexOf(this string source, string search, out int position)
+		public static bool CaseInsIndexOf(this string source, string search, out int index)
 		{
-			return (position = source == null || search == null ? -1 : source.IndexOf(search, StringComparison.OrdinalIgnoreCase)) >= 0;
+			return (index = source == null || search == null ? -1 : source.IndexOf(search, StringComparison.OrdinalIgnoreCase)) >= 0;
 		}
 		/// <summary>
 		/// Utilizes <see cref="StringComparison.OrdinalIgnoreCase"/> to check if a string ends with a search string.
@@ -148,7 +148,7 @@ namespace AdvorangesUtils
 			return mimeType != "image/gif" && mimeType.CaseInsContains("image/");
 		}
 		/// <summary>
-		/// Verifies all characters in the string have a value of a less than the upperlimit.
+		/// Verifies all characters in the string have a value of a less than the upperlimit. Defaults to 1000.
 		/// </summary>
 		/// <param name="str"></param>
 		/// <param name="limit"></param>
@@ -172,16 +172,21 @@ namespace AdvorangesUtils
 		/// If multiple widths and heights are gotten via metadata, will return the smallest ones.
 		/// </summary>
 		/// <param name="s">The image's data.</param>
+		/// <param name="throwIfDuplicateSizes">Throws an exception if there is more than one width or height.</param>
 		/// <returns></returns>
-		public static (int Width, int Height) GetImageSize(this Stream s)
+		public static (int Width, int Height) GetImageSize(this Stream s, bool throwIfDuplicateSizes = false)
 		{
 			try
 			{
 				s.Seek(0, SeekOrigin.Begin);
 				var tags = ImageMetadataReader.ReadMetadata(s).SelectMany(x => x.Tags);
-				var width = tags.Where(x => x.Name == "Image Width").Min(x => Convert.ToInt32(x.Description.Split(' ')[0]));
-				var height = tags.Where(x => x.Name == "Image Height").Min(x => Convert.ToInt32(x.Description.Split(' ')[0]));
-				return (width, height);
+				var width = tags.Where(x => x.Name == "Image Width").Select(x => Convert.ToInt32(x.Description.Split(' ')[0]));
+				var height = tags.Where(x => x.Name == "Image Height").Select(x => Convert.ToInt32(x.Description.Split(' ')[0]));
+				if (throwIfDuplicateSizes && (width.Count() > 1 || height.Count() > 1))
+				{
+					throw new InvalidOperationException("More than one width or height was gotten for the image.");
+				}
+				return (width.Min(), height.Min());
 			}
 			catch (Exception e)
 			{
@@ -196,12 +201,8 @@ namespace AdvorangesUtils
 		/// <returns>An array of strings representing arguments.</returns>
 		public static string[] SplitLikeCommandLine(this string input)
 		{
-			return input.Split('"').Select((x, index) =>
-			{
-				return index % 2 == 0
-					? x.Split(new[] { ' ' })
-					: new[] { x };
-			}).SelectMany(x => x).Where(x => !String.IsNullOrWhiteSpace(x)).ToArray();
+			return input.Split('"').Select((x, index) => index % 2 == 0 ? x.Split(' ') : new[] { x })
+				.SelectMany(x => x).Where(x => !String.IsNullOrWhiteSpace(x)).ToArray();
 		}
 		/// <summary>
 		/// Orders an <see cref="IEnumerable{T}"/> by something that does not implement <see cref="IComparable"/>.

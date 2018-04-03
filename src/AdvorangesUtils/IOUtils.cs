@@ -146,9 +146,10 @@ namespace AdvorangesUtils
 		/// Writes an uncaught exception to a log file in the current directory.
 		/// </summary>
 		/// <param name="exception">The exception.</param>
-		public static void LogUncaughtException(object exception)
+		/// <param name="logFile">The file to log to. If this remains null, will log to the current directory.</param>
+		public static void LogUncaughtException(object exception, FileInfo logFile = null)
 		{
-			var file = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "CrashLog.txt"));
+			var file = logFile ?? new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "CrashLog.txt"));
 			//Use File.AppendText instead of new StreamWriter so the text doesn't get overwritten.
 			using (var writer = file.AppendText())
 			{

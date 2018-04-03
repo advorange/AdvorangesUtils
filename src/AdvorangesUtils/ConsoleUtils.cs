@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -13,43 +14,46 @@ namespace AdvorangesUtils
 		/// <summary>
 		/// The lines which have been written to the console.
 		/// </summary>
-		public static SortedDictionary<string, List<string>> WrittenLines
-		{
-			get
-			{
-				if (_WrittenLines == null)
-				{
-					_WrittenLines = new SortedDictionary<string, List<string>>();
-				}
-				return _WrittenLines;
-			}
-		}
+		public static ConcurrentDictionary<string, List<string>> WrittenLines { get; } = new ConcurrentDictionary<string, List<string>>();
+		/// <summary>
+		/// Whether or not to prefix lines with the time and method that called them.
+		/// </summary>
+		public static bool LogTimeAndCaller { get; set; } = true;
+		/// <summary>
+		/// Whether or not to remove markdown before printing to the console;
+		/// </summary>
+		public static bool RemoveMarkdown { get; set; } = true;
+		/// <summary>
+		/// Whether or not to remove any duplicate new lines before printing to the console.
+		/// </summary>
+		public static bool RemoveDuplicateNewLines { get; set; } = true;
 
-		private static SortedDictionary<string, List<string>> _WrittenLines;
 		private static Object _MessageLock = new Object();
 
 		/// <summary>
 		/// Writes the given text to the console with a timestamp and the calling method. Writes in gray by default.
 		/// </summary>
 		/// <param name="text">The text to write.</param>
-		/// <param name="name">The calling method.</param>
 		/// <param name="color">The color to use for the text.</param>
+		/// <param name="name">The calling method.</param>
 		public static void WriteLine(string text, ConsoleColor color = ConsoleColor.Gray, [CallerMemberName] string name = "")
 		{
-			var line = $"[{DateTime.Now.ToString("HH:mm:ss")}] [{name}]: {text.RemoveAllMarkdown().RemoveDuplicateNewLines()}";
+			text = RemoveMarkdown ? text.RemoveAllMarkdown() : text;
+			text = RemoveDuplicateNewLines ? text.RemoveDuplicateNewLines() : text;
+			text = LogTimeAndCaller ? $"[{DateTime.Now.ToString("HH:mm:ss")}] [{name}]: {text}" : text;
 
 			lock (_MessageLock)
 			{
 				var oldColor = Console.ForegroundColor;
 				Console.ForegroundColor = color;
-				Console.WriteLine(line);
+				Console.WriteLine(text);
 				Console.ForegroundColor = oldColor;
 
 				if (!WrittenLines.TryGetValue(name, out var list))
 				{
-					WrittenLines.Add(name, list = new List<string>());
+					WrittenLines.TryAdd(name, list = new List<string>());
 				}
-				list.Add(line);
+				list.Add(text);
 			}
 		}
 		/// <summary>
