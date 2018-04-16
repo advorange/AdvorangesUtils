@@ -15,7 +15,13 @@ namespace AdvorangesUtils
 	/// </summary>
 	public static class IOUtils
 	{
-		private static JsonSerializerSettings _DefaultSerializingSettings = GenerateDefaultSerializerSettings();
+		/// <summary>
+		/// The serializer settings to use by default.
+		/// </summary>
+		public static JsonSerializerSettings DefaultSerializingSettings = new JsonSerializerSettings
+		{
+			Converters = new[] { new StringEnumConverter() }
+		};
 
 		/// <summary>
 		/// Returns the <see cref="Process.PrivateMemorySize64"/> value divided by a MB.
@@ -31,27 +37,16 @@ namespace AdvorangesUtils
 		}
 		/// <summary>
 		/// Returns a hashed stream for file duplication checking.
+		/// Will not seek on the stream before or after hashing.
 		/// </summary>
 		/// <param name="s">The stream to hash.</param>
 		/// <returns>A string representing a hashed stream.</returns>
 		public static string GetMD5Hash(this Stream s)
 		{
-			s.Seek(0, SeekOrigin.Begin);
-			using (var algorithm = MD5.Create())
+			using (var md5 = MD5.Create())
 			{
-				var computed = algorithm.ComputeHash(s);
-				s.Seek(0, SeekOrigin.Begin);
-				return BitConverter.ToString(computed).Replace("-", "").ToLower();
+				return BitConverter.ToString(md5.ComputeHash(s)).Replace("-", "").ToLower();
 			}
-		}
-		/// <summary>
-		/// Creates a file if it does not already exist, then writes over it.
-		/// </summary>
-		/// <param name="fileInfo">The file to overwrite.</param>
-		/// <param name="text">The text to write.</param>
-		public static void OverwriteFile(FileInfo fileInfo, string text)
-		{
-			File.WriteAllText(fileInfo.FullName, text);
 		}
 		/// <summary>
 		/// Converts the object to json.
@@ -61,29 +56,30 @@ namespace AdvorangesUtils
 		/// <returns>The serialized object.</returns>
 		public static string Serialize(object obj, JsonSerializerSettings settings = null)
 		{
-			return JsonConvert.SerializeObject(obj, Newtonsoft.Json.Formatting.Indented, settings ?? _DefaultSerializingSettings);
+			return JsonConvert.SerializeObject(obj, Newtonsoft.Json.Formatting.Indented, settings ?? DefaultSerializingSettings);
 		}
 		/// <summary>
-		/// Creates an object of type <typeparamref name="T"/> with the supplied string and type.
+		/// Creates an object of type <typeparamref name="TAbstraction"/> with the supplied string and type.
 		/// </summary>
-		/// <typeparam name="T">The general type to deserialize. Can be an abstraction of <paramref name="type"/> but has to be a type where it can be converted to <typeparamref name="T"/>.</typeparam>
+		/// <typeparam name="TAbstraction">The abstracted type to deserialize to. Can be the same as <typeparamref name="TImplementation"/>.</typeparam>
+		/// <typeparam name="TImplementation">The actual implementation of the type.</typeparam>
 		/// <param name="value">The text to deserialize.</param>
-		/// <param name="type">The explicit type of object to create.</param>
 		/// <param name="settings">The json settings to use. If null, uses settings that parse enums as strings and ignores errors.</param>
 		/// <param name="fixes">Fixes for Json with errors.</param>
 		/// <returns>The value put into an object.</returns>
-		public static T Deserialize<T>(string value, Type type, JsonSerializerSettings settings = null, JsonFix[] fixes = null)
+		public static TAbstraction Deserialize<TAbstraction, TImplementation>(string value, 
+			JsonSerializerSettings settings = null, JsonFix[] fixes = null) where TImplementation : TAbstraction
 		{
 			//If no fixes then deserialize normally
 			if (fixes == null)
 			{
-				return (T)JsonConvert.DeserializeObject(value, type, settings ?? _DefaultSerializingSettings);
+				return JsonConvert.DeserializeObject<TImplementation>(value, settings ?? DefaultSerializingSettings);
 			}
 			//Only use fixes specified for the class
-			var typeFixes = fixes.Where(f => f.Type == type || f.Type.IsAssignableFrom(type));
+			var typeFixes = fixes.Where(f => f.Type == typeof(TImplementation) || f.Type.IsAssignableFrom(typeof(TImplementation)));
 			if (!typeFixes.Any())
 			{
-				return (T)JsonConvert.DeserializeObject(value, type, settings ?? _DefaultSerializingSettings);
+				return JsonConvert.DeserializeObject<TImplementation>(value, settings ?? DefaultSerializingSettings);
 			}
 
 			var jObj = JObject.Parse(value);
@@ -94,19 +90,20 @@ namespace AdvorangesUtils
 					jProp.Value = fix.NewValue;
 				}
 			}
-			return (T)JsonConvert.DeserializeObject(jObj.ToString(), type, settings ?? _DefaultSerializingSettings);
+			return JsonConvert.DeserializeObject<TImplementation>(jObj.ToString(), settings ?? DefaultSerializingSettings);
 		}
 		/// <summary>
 		/// Creates an object from json stored in a file.
 		/// By default will ignore any fields/propties deserializing with errors and parses enums as strings.
 		/// </summary>
-		/// <typeparam name="T">The general type to deserialize. Can be an abstraction of <paramref name="type"/> but has to be a type where it can be converted to <typeparamref name="T"/>.</typeparam>
+		/// <typeparam name="TAbstraction">The abstracted type to deserialize to. Can be the same as <typeparamref name="TImplementation"/>.</typeparam>
+		/// <typeparam name="TImplementation">The actual implementation of the type.</typeparam>
 		/// <param name="file">The file to read from.</param>
-		/// <param name="type">The explicit type of object to create.</param>
 		/// <param name="settings">The json settings to use. If null, uses settings that parse enums as strings and ignores errors.</param>
 		/// <param name="fixes">Fixes for Json with errors.</param>
 		/// <returns>The file's text put into the object, or, if deserialization failed, default.</returns>
-		public static T DeserializeFromFile<T>(FileInfo file, Type type, JsonSerializerSettings settings = null, JsonFix[] fixes = null) where T : new()
+		public static TAbstraction DeserializeFromFile<TAbstraction, TImplementation>(FileInfo file,
+			JsonSerializerSettings settings = null, JsonFix[] fixes = null) where TImplementation : TAbstraction, new()
 		{
 			if (file.Exists)
 			{
@@ -114,7 +111,7 @@ namespace AdvorangesUtils
 				{
 					using (var reader = new StreamReader(file.FullName))
 					{
-						return Deserialize<T>(reader.ReadToEnd(), type, settings ?? _DefaultSerializingSettings);
+						return Deserialize<TAbstraction, TImplementation>(reader.ReadToEnd(), settings ?? DefaultSerializingSettings, fixes);
 					}
 				}
 				catch (JsonReaderException jre)
@@ -122,25 +119,7 @@ namespace AdvorangesUtils
 					jre.Write();
 				}
 			}
-			return new T();
-		}
-		/// <summary>
-		/// Generates json serializer settings which ignore most errors, and has a string enum converter.
-		/// </summary>
-		/// <returns></returns>
-		public static JsonSerializerSettings GenerateDefaultSerializerSettings()
-		{
-			return new JsonSerializerSettings
-			{
-				//Ignores errors parsing specific invalid properties instead of throwing exceptions making the entire object null
-				//Will still make the object null if the property's type is changed to something not creatable from the text
-				Error = (sender, e) =>
-				{
-					ConsoleUtils.WriteLine(e.ErrorContext.Error.Message, ConsoleColor.Red);
-					e.ErrorContext.Handled = false;
-				},
-				Converters = new JsonConverter[] { new StringEnumConverter() }
-			};
+			return new TImplementation();
 		}
 		/// <summary>
 		/// Writes an uncaught exception to a log file in the current directory.

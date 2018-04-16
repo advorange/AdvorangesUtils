@@ -170,6 +170,7 @@ namespace AdvorangesUtils
 		/// <summary>
 		/// Gets the width and height of an image through metadata.
 		/// If multiple widths and heights are gotten via metadata, will return the smallest ones.
+		/// Will not seek on the stream, so make sure it's at the beginning yourself.
 		/// </summary>
 		/// <param name="s">The image's data.</param>
 		/// <param name="throwIfDuplicateSizes">Throws an exception if there is more than one width or height.</param>
@@ -178,7 +179,6 @@ namespace AdvorangesUtils
 		{
 			try
 			{
-				s.Seek(0, SeekOrigin.Begin);
 				var tags = ImageMetadataReader.ReadMetadata(s).SelectMany(x => x.Tags);
 				var width = tags.Where(x => x.Name == "Image Width").Select(x => Convert.ToInt32(x.Description.Split(' ')[0]));
 				var height = tags.Where(x => x.Name == "Image Height").Select(x => Convert.ToInt32(x.Description.Split(' ')[0]));
