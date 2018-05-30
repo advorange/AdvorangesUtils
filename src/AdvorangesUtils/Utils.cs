@@ -224,6 +224,19 @@ namespace AdvorangesUtils
 			return input.GroupBy(keySelector).SelectMany(x => x);
 		}
 		/// <summary>
+		/// Puts an <see cref="IEnumerable{T}"/> into a variable amount of <see cref="IEnumerable{T}"/> with each containing <paramref name="groupSize"/> elements.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source"></param>
+		/// <param name="groupSize"></param>
+		/// <returns></returns>
+		public static IEnumerable<IEnumerable<T>> GroupInto<T>(this IEnumerable<T> source, int groupSize)
+		{
+			return source.Select((obj, index) => new { Obj = obj, Index = index })
+				.GroupBy(x => x.Index / groupSize)
+				.Select(g => g.Select(o => o.Obj));
+		}
+		/// <summary>
 		/// Short way to write ConfigureAwait(false).
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
