@@ -26,9 +26,10 @@ namespace AdvorangesUtils
 			}
 
 			//If the enum ToString is different from its value ToString then that means it's a valid flags enum
-			if (useFlagsGottenFromString && value.ToString() != Convert.ChangeType(value, value.GetTypeCode()).ToString())
+			var str = value.ToString();
+			if (useFlagsGottenFromString && str != Convert.ChangeType(value, value.GetTypeCode()).ToString())
 			{
-				foreach (var name in value.ToString().Split(',', '|').Select(x => x.Trim()))
+				foreach (var name in str.Split(',', '|').Select(x => x.Trim()))
 				{
 					yield return name;
 				}
@@ -62,9 +63,10 @@ namespace AdvorangesUtils
 			}
 
 			//If the enum ToString is different from its value ToString then that means it's a valid flags enum
-			if (useFlagsGottenFromString && value.ToString() != Convert.ChangeType(value, value.GetTypeCode()).ToString())
+			var str = value.ToString();
+			if (useFlagsGottenFromString && str != Convert.ChangeType(value, value.GetTypeCode()).ToString())
 			{
-				foreach (var name in value.ToString().Split(',', '|').Select(x => x.Trim()))
+				foreach (var name in str.Split(',', '|').Select(x => x.Trim()))
 				{
 					if (Enum.TryParse(name, out TEnum result))
 					{
@@ -84,7 +86,6 @@ namespace AdvorangesUtils
 				}
 			}
 		}
-
 		/// <summary>
 		/// Attempts to parse enums from the supplied values. <typeparamref name="TEnum"/> must be an enum.
 		/// </summary>

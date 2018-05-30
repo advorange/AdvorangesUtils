@@ -80,6 +80,7 @@ namespace AdvorangesUtils.Tests
 			Assert.IsTrue("https://www.google.com".IsValidUrl());
 			Assert.IsFalse("www.google.com".IsValidUrl());
 			Assert.IsFalse("https://".IsValidUrl());
+			Assert.IsFalse("".IsValidUrl());
 
 			Assert.IsTrue(new Uri(@"https://www.google.com").IsValidUrl());
 			Assert.IsFalse(new Uri(@"C:\Users\User\Downloads\Test.txt").IsValidUrl());

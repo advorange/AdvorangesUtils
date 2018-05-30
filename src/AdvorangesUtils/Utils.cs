@@ -116,7 +116,6 @@ namespace AdvorangesUtils
 		{
 			return enumerable.Contains(search, StringComparer.OrdinalIgnoreCase);
 		}
-
 		/// <summary>
 		/// Returns true if the passed in string is a valid url.
 		/// </summary>
@@ -124,9 +123,7 @@ namespace AdvorangesUtils
 		/// <returns>A boolean indicating whether or not the string is a url.</returns>
 		public static bool IsValidUrl(this string input)
 		{
-			return !String.IsNullOrWhiteSpace(input)
-				&& Uri.TryCreate(input, UriKind.Absolute, out Uri uri)
-				&& (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+			return Uri.TryCreate(input, UriKind.Absolute, out Uri uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
 		}
 		/// <summary>
 		/// Returns true if the passed in uri is a valid url.
@@ -148,16 +145,15 @@ namespace AdvorangesUtils
 			return mimeType != "image/gif" && mimeType.CaseInsContains("image/");
 		}
 		/// <summary>
-		/// Verifies all characters in the string have a value of a less than the upperlimit. Defaults to 1000.
+		/// Verifies all characters in the string have a value of a less than the upperlimit.
 		/// </summary>
 		/// <param name="str"></param>
 		/// <param name="limit"></param>
 		/// <returns></returns>
-		public static bool AllCharsWithinLimit(this string str, int limit = -1)
+		public static bool AllCharsWithinLimit(this string str, int limit = 1000)
 		{
-			return !str.Any(x => x > (limit < 0 ? 1000 : limit));
+			return !str.Any(x => x > limit);
 		}
-
 		/// <summary>
 		/// Returns the count of characters equal to \r or \n.
 		/// </summary>
@@ -173,27 +169,38 @@ namespace AdvorangesUtils
 		/// Will not seek on the stream, so make sure it's at the beginning yourself.
 		/// </summary>
 		/// <param name="s">The image's data.</param>
-		/// <param name="throwIfDuplicateSizes">Throws an exception if there is more than one width or height.</param>
+		/// <param name="method">What to do if more than one width or height is found.</param>
 		/// <returns></returns>
-		public static (int Width, int Height) GetImageSize(this Stream s, bool throwIfDuplicateSizes = false)
+		public static (int Width, int Height) GetImageSize(this Stream s, DuplicateSizeMethod method = DuplicateSizeMethod.Minimum)
 		{
 			try
 			{
 				var tags = ImageMetadataReader.ReadMetadata(s).SelectMany(x => x.Tags);
 				var width = tags.Where(x => x.Name == "Image Width").Select(x => Convert.ToInt32(x.Description.Split(' ')[0]));
 				var height = tags.Where(x => x.Name == "Image Height").Select(x => Convert.ToInt32(x.Description.Split(' ')[0]));
-				if (throwIfDuplicateSizes && (width.Count() > 1 || height.Count() > 1))
+				if (width.Count() > 1 || height.Count() > 1)
 				{
-					throw new InvalidOperationException("More than one width or height was gotten for the image.");
+					switch (method)
+					{
+						case DuplicateSizeMethod.Minimum:
+							return (width.Min(), height.Min());
+						case DuplicateSizeMethod.Maximum:
+							return (width.Max(), height.Max());
+						case DuplicateSizeMethod.First:
+							return (width.First(), height.First());
+						case DuplicateSizeMethod.Last:
+							return (width.Last(), height.Last());
+						case DuplicateSizeMethod.Throw:
+							throw new InvalidOperationException("More than one width or height was gotten for the image.");
+					}
 				}
-				return (width.Min(), height.Min());
+				return (width.Single(), height.Single());
 			}
 			catch (Exception e)
 			{
 				throw new InvalidOperationException("Unable to parse the image's width and height from the stream's metadata.", e);
 			}
 		}
-
 		/// <summary>
 		/// Splits <paramref name="input"/> similar to how command prompt splits arguments.
 		/// </summary>
@@ -216,7 +223,6 @@ namespace AdvorangesUtils
 		{
 			return input.GroupBy(keySelector).SelectMany(x => x);
 		}
-
 		/// <summary>
 		/// Short way to write ConfigureAwait(false).
 		/// </summary>
@@ -236,5 +242,32 @@ namespace AdvorangesUtils
 		{
 			return task.ConfigureAwait(false);
 		}
+	}
+
+	/// <summary>
+	/// What to do when duplicate sizes are found in image metadata.
+	/// </summary>
+	public enum DuplicateSizeMethod
+	{
+		/// <summary>
+		/// Return the smallest values of each.
+		/// </summary>
+		Minimum,
+		/// <summary>
+		/// Return the largest values of each.
+		/// </summary>
+		Maximum,
+		/// <summary>
+		/// Return the first values of each.
+		/// </summary>
+		First,
+		/// <summary>
+		/// Return the last values of each.
+		/// </summary>
+		Last,
+		/// <summary>
+		/// Throw an exception.
+		/// </summary>
+		Throw,
 	}
 }

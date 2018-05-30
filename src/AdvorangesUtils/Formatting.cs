@@ -126,8 +126,7 @@ namespace AdvorangesUtils
 		public static string ToReadable(this DateTime dt)
 		{
 			var utc = dt.ToUniversalTime();
-			var monthName = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(utc.Month);
-			return $"{monthName} {utc.Day}, {utc.Year} at {utc.ToLongTimeString()}";
+			return $"{CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(utc.Month)} {utc.Day}, {utc.Year} at {utc.ToLongTimeString()}";
 		}
 		/// <summary>
 		/// Returns the passed in time as a human readable time and says how many days ago it was. Uses markdown.
@@ -136,8 +135,7 @@ namespace AdvorangesUtils
 		/// <returns>Formatted string that says when something was created with markdown.</returns>
 		public static string ToCreatedAt(this DateTime dt)
 		{
-			var diff = DateTime.UtcNow.Subtract(dt).TotalDays;
-			return $"**Created:** `{ToReadable(dt)}` (`{diff:0.00}` days ago)";
+			return $"**Created:** `{ToReadable(dt)}` (`{DateTime.UtcNow.Subtract(dt).TotalDays:0.00}` days ago)";
 		}
 	}
 }

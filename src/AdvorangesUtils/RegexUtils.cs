@@ -8,11 +8,11 @@ namespace AdvorangesUtils
 	/// </summary>
 	public static class RegexUtils
 	{
-		private static Regex _TwitchRegex = new Regex("^[a-zA-Z0-9_]{4,25}$", RegexOptions.Compiled);
-		private static TimeSpan _Timespan = new TimeSpan(5000);
+		private static readonly Regex _TwitchRegex = new Regex("^[a-zA-Z0-9_]{4,25}$", RegexOptions.Compiled);
+		private static readonly TimeSpan _Timespan = new TimeSpan(5000);
 
 		/// <summary>
-		/// Returns true if the pattern is found within the input. Has a timeout of 1,000,000 ticks.
+		/// Returns true if the pattern is found within the input. Has a timeout of 5,000 ticks.
 		/// </summary>
 		/// <param name="input">The input to check.</param>
 		/// <param name="pattern">The regex to check the input with.</param>
