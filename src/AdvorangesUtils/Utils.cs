@@ -1,12 +1,11 @@
-﻿using MetadataExtractor;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using MetadataExtractor;
 
 namespace AdvorangesUtils
 {
@@ -202,13 +201,21 @@ namespace AdvorangesUtils
 			}
 		}
 		/// <summary>
-		/// Splits <paramref name="input"/> similar to how command prompt splits arguments.
+		/// Splits <paramref name="input"/> similar to how a command line splits arguments.
 		/// </summary>
+		/// <remarks>
+		/// This method will split like command line when no arguments are provided for the arrays.
+		/// When arguments are provided for the arrays, then it can split very differently.
+		/// Square brackets, point brackets, etc. other quotes can be used in <paramref name="except"/> to treat those as standard quotes.
+		/// </remarks>
 		/// <param name="input">The string to split.</param>
+		/// <param name="split">What to split on. If left null, will split on space.</param>
+		/// <param name="except">What to not split when in between. If left null, will not split when between quotes.</param>
 		/// <returns>An array of strings representing arguments.</returns>
-		public static string[] SplitLikeCommandLine(this string input)
+		public static string[] SplitLikeCommandLine(this string input, char[] split = default, char[] except = default)
 		{
-			return input.Split('"').Select((x, index) => index % 2 == 0 ? x.Split(' ') : new[] { x })
+			return input.Split(except ?? new[] { '"' })
+				.Select((x, index) => index % 2 == 0 ? x.Split(split ?? new[] { ' ' }) : new[] { x })
 				.SelectMany(x => x).Where(x => !String.IsNullOrWhiteSpace(x)).ToArray();
 		}
 		/// <summary>

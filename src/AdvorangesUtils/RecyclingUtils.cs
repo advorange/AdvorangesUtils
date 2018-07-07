@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Security;
 
 namespace AdvorangesUtils
 {
@@ -26,7 +28,7 @@ namespace AdvorangesUtils
 			public string lpszProgressTitle;
 		}
 
-		[DllImport("shell32.dll", CharSet = CharSet.Auto)]
+		[HandleProcessCorruptedStateExceptions, SecurityCritical, DllImport("shell32.dll", CharSet = CharSet.Auto)]
 		private static extern int SHFileOperation(ref SHFILEOPSTRUCT FileOp);
 
 		private const int FO_DELETE = 3;
@@ -35,13 +37,14 @@ namespace AdvorangesUtils
 
 		/// <summary>
 		/// Utilizes <see cref="SHFileOperation(ref SHFILEOPSTRUCT)"/> to move a file to the recycle bin with undo preservation and no confirmation.
-		/// If invoked on non windows, will simply delete the file.
+		/// Must be invoked on Windows using .Net Framework if <paramref name="usingFramework"/> is true otherwise this will throw an uncatchable AccessViolationException.
 		/// </summary>
 		/// <param name="file">The file to delete.</param>
+		/// <param name="usingFramework">Whether the calling DLL is .Net Framework.</param>
 		/// <returns>The error code gotten from moving the file. 0 indicates success.</returns>
-		public static int MoveFile(FileInfo file)
+		public static int MoveFile(FileInfo file, bool usingFramework = false)
 		{
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			if (usingFramework && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
 				return Move(file.FullName);
 			}
@@ -50,13 +53,14 @@ namespace AdvorangesUtils
 		}
 		/// <summary>
 		/// Utilizes <see cref="SHFileOperation(ref SHFILEOPSTRUCT)"/> to move multiple files to the recycle bin with undo preservation and no confirmation.
-		/// If invoked on non windows, will simply delete the file.
+		/// Must be invoked on Windows using .Net Framework if <paramref name="usingFramework"/> is true otherwise this will throw an uncatchable AccessViolationException.
 		/// </summary>
 		/// <param name="files">The files to delete.</param>
+		/// <param name="usingFramework">Whether the calling DLL is .Net Framework.</param>
 		/// <returns>The error code gotten from moving the file. 0 indicates success.</returns>
-		public static int MoveFiles(IEnumerable<FileInfo> files)
+		public static int MoveFiles(IEnumerable<FileInfo> files, bool usingFramework = false)
 		{
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			if (usingFramework && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
 				//Files need to be joined with null char and entire string needs to end with it too
 				return Move(String.Join("\0", files.Select(x => x.FullName)) + "\0");
