@@ -206,17 +206,52 @@ namespace AdvorangesUtils
 		/// <remarks>
 		/// This method will split like command line when no arguments are provided for the arrays.
 		/// When arguments are provided for the arrays, then it can split very differently.
-		/// Square brackets, point brackets, etc. other quotes can be used in <paramref name="except"/> to treat those as standard quotes.
+		/// Square brackets, point brackets, etc. other quotes can be used in <paramref name="dontSplitWhenInside"/> to treat those as standard quotes.
 		/// </remarks>
 		/// <param name="input">The string to split.</param>
-		/// <param name="split">What to split on. If left null, will split on space.</param>
-		/// <param name="except">What to not split when in between. If left null, will not split when between quotes.</param>
+		/// <param name="seperators">What to split on. If left null, will split on space.</param>
+		/// <param name="dontSplitWhenInside">What to not split when in between. If left null, will not split when between quotes.</param>
+		/// <param name="allowEscaping">Whether or not escaping is allowed for the characters to not split within.</param>
 		/// <returns>An array of strings representing arguments.</returns>
-		public static string[] SplitLikeCommandLine(this string input, char[] split = default, char[] except = default)
+		public static string[] SplitLikeCommandLine(this string input, char[] seperators = default, char[] dontSplitWhenInside = default, bool allowEscaping = true)
 		{
-			return input.Split(except ?? new[] { '"' })
-				.Select((x, index) => index % 2 == 0 ? x.Split(split ?? new[] { ' ' }) : new[] { x })
-				.SelectMany(x => x).Where(x => !String.IsNullOrWhiteSpace(x)).ToArray();
+			seperators = seperators ?? new[] { ' ' };
+			dontSplitWhenInside = dontSplitWhenInside ?? new[] { '"' };
+
+			var parts = new List<string>();
+			var inside = false; //Whether or not the current part is inside an ignored
+			var escaped = false; //Whether the current character is escaped
+			var sb = new StringBuilder();
+			foreach (var c in input)
+			{
+				if (escaped)
+				{
+					sb.Append(c);
+					escaped = false;
+					continue;
+				}
+				if (c == '\\')
+				{
+					escaped = true;
+					continue;
+				}
+				if (dontSplitWhenInside.Contains(c))
+				{
+					inside = !inside;
+				}
+				if (!inside && seperators.Contains(c))
+				{
+					parts.Add(sb.ToString());
+					sb.Clear();
+					continue;
+				}
+				sb.Append(c);
+			}
+			if (sb.Length > 0)
+			{
+				parts.Add(sb.ToString());
+			}
+			return parts.Where(x => !String.IsNullOrWhiteSpace(x)).ToArray();
 		}
 		/// <summary>
 		/// Orders an <see cref="IEnumerable{T}"/> by something that does not implement <see cref="IComparable"/>.

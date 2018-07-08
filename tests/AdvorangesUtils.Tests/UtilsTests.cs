@@ -72,7 +72,8 @@ namespace AdvorangesUtils.Tests
 		{
 			Assert.AreEqual(9, "The quick brown fox jumps over the lazy dog".SplitLikeCommandLine().Length);
 			Assert.AreEqual(7, "The \"quick brown\" fox jumps \"over the\" lazy dog".SplitLikeCommandLine().Length);
-			Assert.AreEqual(2, "The \"quick brown fox jumps over the lazy dog".SplitLikeCommandLine().Length);
+			Assert.AreEqual(2, "The \"quick brown fox \\jumps over the lazy dog".SplitLikeCommandLine().Length);
+			Assert.AreEqual(9, "The \\\"quick brown fox jumps over the lazy dog".SplitLikeCommandLine().Length);
 			Assert.AreEqual(7, "The [quick brown] fox jumps [over the] lazy dog".SplitLikeCommandLine(null, new[] { '[', ']' }).Length);
 		}
 		[TestMethod]
