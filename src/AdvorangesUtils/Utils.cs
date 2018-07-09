@@ -246,6 +246,8 @@ namespace AdvorangesUtils
 				if (q && !e)
 				{
 					inside = !inside;
+					part.AddQuoteChar(c);
+					continue;
 				}
 				if (s && !inside)
 				{

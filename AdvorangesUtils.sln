@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.27428.2015
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AdvorangesUtils", "src\AdvorangesUtils\AdvorangesUtils.csproj", "{589DB2CB-978E-4051-B9C7-538F6F2AA6C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvorangesUtils.Tests", "tests\AdvorangesUtils.Tests\AdvorangesUtils.Tests.csproj", "{015612E1-ECCB-4A57-9EE4-4BFF15DDE18A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AdvorangesUtils.Tests", "tests\AdvorangesUtils.Tests\AdvorangesUtils.Tests.csproj", "{015612E1-ECCB-4A57-9EE4-4BFF15DDE18A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
