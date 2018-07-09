@@ -68,13 +68,17 @@ namespace AdvorangesUtils.Tests
 			Assert.AreEqual(2, "\r\n".CountLineBreaks());
 		}
 		[TestMethod]
-		public void SplitLikeCommandLine_Test()
+		public void ComplexSplit_Test()
 		{
 			Assert.AreEqual(9, "The quick brown fox jumps over the lazy dog".SplitLikeCommandLine().Length);
 			Assert.AreEqual(7, "The \"quick brown\" fox jumps \"over the\" lazy dog".SplitLikeCommandLine().Length);
+			Assert.AreEqual(4, "The quick brown\" fox jumps \"over the\" lazy dog".SplitLikeCommandLine().Length);
 			Assert.AreEqual(2, "The \"quick brown fox \\jumps over the lazy dog".SplitLikeCommandLine().Length);
 			Assert.AreEqual(9, "The \\\"quick brown fox jumps over the lazy dog".SplitLikeCommandLine().Length);
-			Assert.AreEqual(7, "The [quick brown] fox jumps [over the] lazy dog".SplitLikeCommandLine(null, new[] { '[', ']' }).Length);
+			Assert.AreEqual(7, "The [quick brown] fox jumps [over the] lazy dog".ComplexSplit(new[] { ' ' }, new[] { '[', ']' }, true).Length);
+			Assert.AreEqual(8, "The \\[quick brown\\] fox jumps [over the] lazy dog".ComplexSplit(new[] { ' ' }, new[] { '[', ']' }, true).Length);
+			Assert.AreEqual(4, "The \\[quick brown] fox jumps [over the] lazy dog".ComplexSplit(new[] { ' ' }, new[] { '[', ']' }, true).Length);
+			Assert.AreEqual(2, "test=\"value;;;;aaa\";\ntest2=\"value2\";".ComplexSplit(new[] { ';' }, new[] { '"' }, true).Length);
 		}
 		[TestMethod]
 		public void IsValidUrl_Test()

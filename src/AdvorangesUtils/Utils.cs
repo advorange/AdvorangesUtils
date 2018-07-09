@@ -201,56 +201,61 @@ namespace AdvorangesUtils
 			}
 		}
 		/// <summary>
-		/// Splits <paramref name="input"/> similar to how a command line splits arguments.
+		/// Splits a string in a similar fashion to how a command line splits.
+		/// </summary>
+		/// <param name="input"></param>
+		/// <returns></returns>
+		public static string[] SplitLikeCommandLine(this string input)
+		{
+			return input.ComplexSplit(new[] { ' ' }, new[] { '"' }, removeQuotes: true);
+		}
+		/// <summary>
+		/// Splits a string by the characters passed in <paramref name="seperators"/> unless they're inside <paramref name="quotes"/>.
 		/// </summary>
 		/// <remarks>
 		/// This method will split like command line when no arguments are provided for the arrays.
 		/// When arguments are provided for the arrays, then it can split very differently.
-		/// Square brackets, point brackets, etc. other quotes can be used in <paramref name="dontSplitWhenInside"/> to treat those as standard quotes.
+		/// Square brackets, point brackets, etc. other quotes can be used in <paramref name="quotes"/> to treat those as standard quotes.
 		/// </remarks>
 		/// <param name="input">The string to split.</param>
-		/// <param name="seperators">What to split on. If left null, will split on space.</param>
-		/// <param name="dontSplitWhenInside">What to not split when in between. If left null, will not split when between quotes.</param>
-		/// <param name="allowEscaping">Whether or not escaping is allowed for the characters to not split within.</param>
+		/// <param name="seperators">What to split on.</param>
+		/// <param name="quotes">What to not split when in between.</param>
+		/// <param name="removeQuotes">When a part has something from <paramref name="quotes"/> surrounding it they will be removed.</param>
 		/// <returns>An array of strings representing arguments.</returns>
-		public static string[] SplitLikeCommandLine(this string input, char[] seperators = default, char[] dontSplitWhenInside = default, bool allowEscaping = true)
+		public static string[] ComplexSplit(this string input, char[] seperators, char[] quotes, bool removeQuotes)
 		{
-			seperators = seperators ?? new[] { ' ' };
-			dontSplitWhenInside = dontSplitWhenInside ?? new[] { '"' };
+			if (seperators == null)
+			{
+				throw new ArgumentException($"{nameof(seperators)} cannot be null.", nameof(seperators));
+			}
+			if (quotes == null)
+			{
+				throw new ArgumentException($"{nameof(quotes)} cannot be null.", nameof(quotes));
+			}
 
 			var parts = new List<string>();
 			var inside = false; //Whether or not the current part is inside an ignored
-			var escaped = false; //Whether the current character is escaped
-			var sb = new StringBuilder();
-			foreach (var c in input)
+			var part = new Part(removeQuotes);
+			for (int i = 0; i < input.Length; ++i)
 			{
-				if (escaped)
-				{
-					sb.Append(c);
-					escaped = false;
-					continue;
-				}
-				if (c == '\\')
-				{
-					escaped = true;
-					continue;
-				}
-				if (dontSplitWhenInside.Contains(c))
+				var c = input[i];
+				var q = quotes.Contains(c);
+				var s = seperators.Contains(c);
+				var e = i > 0 && input[i - 1] == '\\';
+
+				if (q && !e)
 				{
 					inside = !inside;
 				}
-				if (!inside && seperators.Contains(c))
+				if (s && !inside)
 				{
-					parts.Add(sb.ToString());
-					sb.Clear();
+					parts.Add(part.ToString());
+					part.Clear();
 					continue;
 				}
-				sb.Append(c);
+				part.AddChar(c);
 			}
-			if (sb.Length > 0)
-			{
-				parts.Add(sb.ToString());
-			}
+			parts.Add(part.ToString());
 			return parts.Where(x => !String.IsNullOrWhiteSpace(x)).ToArray();
 		}
 		/// <summary>
@@ -296,6 +301,57 @@ namespace AdvorangesUtils
 		public static ConfiguredTaskAwaitable CAF(this Task task)
 		{
 			return task.ConfigureAwait(false);
+		}
+
+		private sealed class Part
+		{
+			private readonly bool _RemoveQuotes;
+			private readonly StringBuilder _SB = new StringBuilder();
+			private bool _StartsWithQuote;
+			private bool _EndsWithQuote;
+
+			public Part(bool removeQuotes)
+			{
+				_RemoveQuotes = removeQuotes;
+			}
+
+			public void AddChar(char c)
+			{
+				_SB.Append(c);
+				_EndsWithQuote = false;
+			}
+			public void AddQuoteChar(char c)
+			{
+				if (_SB.Length == 0)
+				{
+					_StartsWithQuote = true;
+				}
+				_SB.Append(c);
+				_EndsWithQuote = true;
+			}
+			public void Clear()
+			{
+				_SB.Clear();
+				_StartsWithQuote = false;
+				_EndsWithQuote = false;
+			}
+
+			public override string ToString()
+			{
+				var s = _SB.ToString();
+				if (_RemoveQuotes)
+				{
+					if (_StartsWithQuote)
+					{
+						s = s.Substring(1);
+					}
+					if (_EndsWithQuote)
+					{
+						s = s.Substring(0, s.Length - 1);
+					}
+				}
+				return s;
+			}
 		}
 	}
 
