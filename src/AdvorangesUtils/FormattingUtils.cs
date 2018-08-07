@@ -10,7 +10,7 @@ namespace AdvorangesUtils
 	/// <summary>
 	/// Formatting for basic things, such as escaping characters or removing new lines.
 	/// </summary>
-	public static class Formatting
+	public static class FormattingUtils
 	{
 		/// <summary>
 		/// Joins all strings which are not null with the given string.

@@ -235,7 +235,7 @@ namespace AdvorangesUtils
 
 			var parts = new List<string>();
 			var inside = false; //Whether or not the current part is inside an ignored
-			var part = new Part(removeQuotes);
+			var part = new ComplexSplitPart(removeQuotes);
 			for (int i = 0; i < input.Length; ++i)
 			{
 				var c = input[i];
@@ -304,83 +304,5 @@ namespace AdvorangesUtils
 		{
 			return task.ConfigureAwait(false);
 		}
-
-		private sealed class Part
-		{
-			private readonly bool _RemoveQuotes;
-			private readonly StringBuilder _SB = new StringBuilder();
-			private bool _StartsWithQuote;
-			private bool _EndsWithQuote;
-
-			public Part(bool removeQuotes)
-			{
-				_RemoveQuotes = removeQuotes;
-			}
-
-			public void AddChar(char c)
-			{
-				_SB.Append(c);
-				_EndsWithQuote = false;
-			}
-			public void AddQuoteChar(char c)
-			{
-				if (_SB.Length == 0)
-				{
-					_StartsWithQuote = true;
-				}
-				_SB.Append(c);
-				_EndsWithQuote = true;
-			}
-			public void Clear()
-			{
-				_SB.Clear();
-				_StartsWithQuote = false;
-				_EndsWithQuote = false;
-			}
-
-			public override string ToString()
-			{
-				var s = _SB.ToString();
-				if (_RemoveQuotes)
-				{
-					if (_StartsWithQuote)
-					{
-						s = s.Substring(1);
-					}
-					if (_EndsWithQuote)
-					{
-						s = s.Substring(0, s.Length - 1);
-					}
-				}
-				return s;
-			}
-		}
-	}
-
-	/// <summary>
-	/// What to do when duplicate sizes are found in image metadata.
-	/// </summary>
-	public enum DuplicateSizeMethod
-	{
-		/// <summary>
-		/// Return the smallest values of each.
-		/// </summary>
-		Minimum,
-		/// <summary>
-		/// Return the largest values of each.
-		/// </summary>
-		Maximum,
-		/// <summary>
-		/// Return the first values of each.
-		/// </summary>
-		First,
-		/// <summary>
-		/// Return the last values of each.
-		/// </summary>
-		Last,
-		/// <summary>
-		/// Throw an exception.
-		/// </summary>
-		Throw,
 	}
 }
