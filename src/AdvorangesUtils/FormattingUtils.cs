@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -10,7 +9,7 @@ namespace AdvorangesUtils
 	/// <summary>
 	/// Formatting for basic things, such as escaping characters or removing new lines.
 	/// </summary>
-	public static class Formatting
+	public static class FormattingUtils
 	{
 		/// <summary>
 		/// Joins all strings which are not null with the given string.
@@ -20,7 +19,7 @@ namespace AdvorangesUtils
 		/// <returns>All strings which were not null joined together.</returns>
 		public static string JoinNonNullStrings(this IEnumerable<string> values, string seperator)
 		{
-			return String.Join(seperator, values.Where(x => !String.IsNullOrWhiteSpace(x)));
+			return string.Join(seperator, values.Where(x => !string.IsNullOrWhiteSpace(x)));
 		}
 		/// <summary>
 		/// Returns a string which is a numbered list of the passed in objects. The format is for the passed in arguments; the counter is added by default.
@@ -33,7 +32,7 @@ namespace AdvorangesUtils
 		{
 			var list = values.ToList();
 			var maxLen = list.Count.ToString().Length;
-			return String.Join("\n", list.Select((x, index) => $"`{(index + 1).ToString().PadLeft(maxLen, '0')}.` {func(x)}"));
+			return string.Join("\n", list.Select((x, index) => $"`{(index + 1).ToString().PadLeft(maxLen, '0')}.` {func(x)}"));
 		}
 		/// <summary>
 		/// Returns the input string with ` escaped.
@@ -80,12 +79,12 @@ namespace AdvorangesUtils
 			for (var i = 0; i < input.Length; ++i)
 			{
 				var c = input[i];
-				if (Char.IsUpper(c) && (i > 0 && !Char.IsWhiteSpace(input[i - 1])))
+				if (char.IsUpper(c) && i > 0 && !char.IsWhiteSpace(input[i - 1]))
 				{
 					sb.Append(' ');
 				}
 				//Determine if the char should be made capital
-				sb.Append(i == 0 || i > 0 && Char.IsWhiteSpace(input[i - 1]) ? Char.ToUpper(c) : c);
+				sb.Append(i == 0 || (i > 0 && char.IsWhiteSpace(input[i - 1])) ? char.ToUpper(c) : c);
 			}
 			return sb.ToString();
 		}
@@ -107,11 +106,11 @@ namespace AdvorangesUtils
 		/// <returns>Formatted string displaying how long the program has been running.</returns>
 		public static string GetUptime()
 		{
-			var span = DateTime.UtcNow - Process.GetCurrentProcess().StartTime.ToUniversalTime();
+			var span = ProcessInfoUtils.GetUptime();
 			return $"{(int)span.TotalDays}:{span.Hours:00}:{span.Minutes:00}:{span.Seconds:00}";
 		}
 		/// <summary>
-		/// Returns the current time in a year, month, day, hour, minute, second format. E.G: 20170815_053645
+		/// Returns the current UTC time in a year, month, day, hour, minute, second format. E.G: 20170815_053645
 		/// </summary>
 		/// <returns>Formatted string for use in file names.</returns>
 		public static string ToSaving()
@@ -126,7 +125,8 @@ namespace AdvorangesUtils
 		public static string ToReadable(this DateTime dt)
 		{
 			var utc = dt.ToUniversalTime();
-			return $"{CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(utc.Month)} {utc.Day}, {utc.Year} at {utc.ToLongTimeString()}";
+			var month = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(utc.Month);
+			return $"{month} {utc.Day}, {utc.Year} at {utc.ToLongTimeString()}";
 		}
 		/// <summary>
 		/// Returns the passed in time as a human readable time and says how many days ago it was. Uses markdown.

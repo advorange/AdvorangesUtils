@@ -98,5 +98,20 @@ namespace AdvorangesUtils.Tests
 			Assert.IsFalse(@"C:\Users\User\Downloads\Test.txt".IsImagePath());
 			Assert.IsFalse(@"C:\Users\User\Downloads\Test.gif".IsImagePath());
 		}
+		[TestMethod]
+		public void IsAssignableFromGeneric_Test()
+		{
+			Assert.IsFalse(typeof(object).InheritsFromGeneric(typeof(Generic<>)));
+			Assert.IsFalse(typeof(string).InheritsFromGeneric(typeof(Generic<>)));
+			Assert.IsFalse(typeof(Parent).InheritsFromGeneric(typeof(Generic<>)));
+			Assert.ThrowsException<ArgumentException>(() => typeof(Generic<>).InheritsFromGeneric(typeof(Parent)));
+			Assert.IsTrue(typeof(Child).InheritsFromGeneric(typeof(Generic<>)));
+			Assert.IsFalse(typeof(Child).InheritsFromGeneric(typeof(Generic<int>)));
+			Assert.IsTrue(typeof(Child).InheritsFromGeneric(typeof(Generic<string>)));
+		}
+
+		private class Parent { }
+		private class Generic<T> : Parent { }
+		private class Child : Generic<string> { }
 	}
 }

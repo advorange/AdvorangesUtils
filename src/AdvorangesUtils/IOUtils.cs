@@ -1,12 +1,10 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Diagnostics;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 
 namespace AdvorangesUtils
 {
@@ -23,18 +21,6 @@ namespace AdvorangesUtils
 			Converters = new[] { new StringEnumConverter() }
 		};
 
-		/// <summary>
-		/// Returns the <see cref="Process.PrivateMemorySize64"/> value divided by a MB.
-		/// </summary>
-		/// <returns>The amount of private memory in MBs.</returns>
-		public static double GetMemory()
-		{
-			using (var process = Process.GetCurrentProcess())
-			{
-				process.Refresh();
-				return process.PrivateMemorySize64 / (1024.0 * 1024.0);
-			}
-		}
 		/// <summary>
 		/// Returns a hashed stream for file duplication checking.
 		/// Will not seek on the stream before or after hashing.
@@ -56,70 +42,61 @@ namespace AdvorangesUtils
 		/// <returns>The serialized object.</returns>
 		public static string Serialize(object obj, JsonSerializerSettings settings = null)
 		{
-			return JsonConvert.SerializeObject(obj, Newtonsoft.Json.Formatting.Indented, settings ?? DefaultSerializingSettings);
+			return JsonConvert.SerializeObject(obj, Formatting.Indented, settings ?? DefaultSerializingSettings);
 		}
 		/// <summary>
-		/// Creates an object of type <typeparamref name="TAbstraction"/> with the supplied string and type.
+		/// Creates an object of type <typeparamref name="T"/> with the supplied string and type.
+		/// If unable to create an object, will return the default value.
 		/// </summary>
-		/// <typeparam name="TAbstraction">The abstracted type to deserialize to. Can be the same as <typeparamref name="TImplementation"/>.</typeparam>
-		/// <typeparam name="TImplementation">The actual implementation of the type.</typeparam>
+		/// <typeparam name="T">The actual implementation of the type.</typeparam>
 		/// <param name="value">The text to deserialize.</param>
 		/// <param name="settings">The json settings to use. If null, uses settings that parse enums as strings and ignores errors.</param>
 		/// <param name="fixes">Fixes for Json with errors.</param>
+		/// <param name="catchInside">Whether or not to catch <see cref="JsonReaderException"/> inside the method.</param>
 		/// <returns>The value put into an object.</returns>
-		public static TAbstraction Deserialize<TAbstraction, TImplementation>(string value, 
-			JsonSerializerSettings settings = null, JsonFix[] fixes = null) where TImplementation : TAbstraction
+		public static T Deserialize<T>(string value, JsonSerializerSettings settings = null, JsonFix[] fixes = null, bool catchInside = true)
 		{
-			//If no fixes then deserialize normally
-			if (fixes == null)
+			try
 			{
-				return JsonConvert.DeserializeObject<TImplementation>(value, settings ?? DefaultSerializingSettings);
-			}
-			//Only use fixes specified for the class
-			var typeFixes = fixes.Where(f => f.Type == typeof(TImplementation) || f.Type.IsAssignableFrom(typeof(TImplementation)));
-			if (!typeFixes.Any())
-			{
-				return JsonConvert.DeserializeObject<TImplementation>(value, settings ?? DefaultSerializingSettings);
-			}
-
-			var jObj = JObject.Parse(value);
-			foreach (var fix in typeFixes)
-			{
-				if (jObj.SelectToken(fix.Path)?.Parent is JProperty jProp && fix.ErrorValues.Any(x => x.IsMatch(jProp.Value.ToString())))
+				//If no fixes then deserialize normally
+				if (fixes == null)
 				{
-					jProp.Value = fix.NewValue;
+					return JsonConvert.DeserializeObject<T>(value, settings ?? DefaultSerializingSettings);
 				}
+				//Only use fixes specified for the class
+				var typeFixes = fixes.Where(f => f.Type == typeof(T) || f.Type.IsAssignableFrom(typeof(T)));
+				if (!typeFixes.Any())
+				{
+					return JsonConvert.DeserializeObject<T>(value, settings ?? DefaultSerializingSettings);
+				}
+				var jObj = JObject.Parse(value);
+				foreach (var fix in typeFixes)
+				{
+					if (jObj.SelectToken(fix.Path)?.Parent is JProperty jProp && fix.ErrorValues.Any(x => x.IsMatch(jProp.Value.ToString())))
+					{
+						jProp.Value = fix.NewValue;
+					}
+				}
+				return JsonConvert.DeserializeObject<T>(jObj.ToString(), settings ?? DefaultSerializingSettings);
 			}
-			return JsonConvert.DeserializeObject<TImplementation>(jObj.ToString(), settings ?? DefaultSerializingSettings);
+			catch (JsonReaderException jre) when (catchInside)
+			{
+				jre.Write();
+			}
+			return default;
 		}
 		/// <summary>
-		/// Creates an object from json stored in a file.
-		/// By default will ignore any fields/propties deserializing with errors and parses enums as strings.
+		/// Creates an object from json stored in the file. If unable to create an object, will return the default value.
 		/// </summary>
-		/// <typeparam name="TAbstraction">The abstracted type to deserialize to. Can be the same as <typeparamref name="TImplementation"/>.</typeparam>
-		/// <typeparam name="TImplementation">The actual implementation of the type.</typeparam>
+		/// <typeparam name="T">The actual implementation of the type.</typeparam>
 		/// <param name="file">The file to read from.</param>
 		/// <param name="settings">The json settings to use. If null, uses settings that parse enums as strings and ignores errors.</param>
 		/// <param name="fixes">Fixes for Json with errors.</param>
+		/// <param name="catchInside">Whether or not to catch <see cref="JsonReaderException"/> inside the method.</param>
 		/// <returns>The file's text put into the object, or, if deserialization failed, default.</returns>
-		public static TAbstraction DeserializeFromFile<TAbstraction, TImplementation>(FileInfo file,
-			JsonSerializerSettings settings = null, JsonFix[] fixes = null) where TImplementation : TAbstraction, new()
+		public static T DeserializeFromFile<T>(FileInfo file, JsonSerializerSettings settings = null, JsonFix[] fixes = null, bool catchInside = true)
 		{
-			if (file.Exists)
-			{
-				try
-				{
-					using (var reader = new StreamReader(file.FullName))
-					{
-						return Deserialize<TAbstraction, TImplementation>(reader.ReadToEnd(), settings ?? DefaultSerializingSettings, fixes);
-					}
-				}
-				catch (JsonReaderException jre)
-				{
-					jre.Write();
-				}
-			}
-			return new TImplementation();
+			return file.Exists ? Deserialize<T>(File.ReadAllText(file.FullName), settings, fixes, catchInside) : default;
 		}
 		/// <summary>
 		/// Writes an uncaught exception to a log file in the current directory.
@@ -137,28 +114,23 @@ namespace AdvorangesUtils
 
 			ConsoleUtils.WriteLine($"Something has gone drastically wrong. Check {file} for more details.", ConsoleColor.Red);
 		}
-	}
-
-	/// <summary>
-	/// A fix to an invalid value in Json.
-	/// </summary>
-	public struct JsonFix
-	{
 		/// <summary>
-		/// The type to apply this fix to.
+		/// Makes sure the directory and file exists then writes the text to the file.
 		/// </summary>
-		public Type Type;
-		/// <summary>
-		/// The Json path to the value.
-		/// </summary>
-		public string Path;
-		/// <summary>
-		/// Regex for checking if any values are invalid.
-		/// </summary>
-		public Regex[] ErrorValues;
-		/// <summary>
-		/// The value to replace with.
-		/// </summary>
-		public string NewValue;
+		/// <param name="file"></param>
+		/// <param name="text"></param>
+		public static void SafeWriteAllText(FileInfo file, string text)
+		{
+			//Don't use file.Exists because the property sometimes isn't updated.
+			if (!File.Exists(file.FullName))
+			{
+				Directory.CreateDirectory(Path.GetDirectoryName(file.FullName));
+				using (var fs = file.Create())
+				{
+					fs.Close();
+				}
+			}
+			File.WriteAllText(file.FullName, text);
+		}
 	}
 }

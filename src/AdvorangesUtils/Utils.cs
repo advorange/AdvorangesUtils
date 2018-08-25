@@ -22,7 +22,7 @@ namespace AdvorangesUtils
 		/// <returns></returns>
 		public static bool CaseInsEquals(this string str1, string str2)
 		{
-			return String.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
+			return string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
 		}
 		/// <summary>
 		/// Utilizes <see cref="StringComparison.OrdinalIgnoreCase"/> to check if a string contains a search string.
@@ -235,7 +235,7 @@ namespace AdvorangesUtils
 
 			var parts = new List<string>();
 			var inside = false; //Whether or not the current part is inside an ignored
-			var part = new Part(removeQuotes);
+			var part = new ComplexSplitPart(removeQuotes);
 			for (int i = 0; i < input.Length; ++i)
 			{
 				var c = input[i];
@@ -258,7 +258,7 @@ namespace AdvorangesUtils
 				part.AddChar(c);
 			}
 			parts.Add(part.ToString());
-			return parts.Where(x => !String.IsNullOrWhiteSpace(x)).ToArray();
+			return parts.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
 		}
 		/// <summary>
 		/// Orders an <see cref="IEnumerable{T}"/> by something that does not implement <see cref="IComparable"/>.
@@ -286,6 +286,109 @@ namespace AdvorangesUtils
 				.Select(g => g.Select(o => o.Obj));
 		}
 		/// <summary>
+		/// Adds all of the collection to the list.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="list"></param>
+		/// <param name="collection"></param>
+		public static void AddRange<T>(this IList<T> list, IEnumerable<T> collection)
+		{
+			if (list == null)
+			{
+				throw new ArgumentNullException(nameof(list));
+			}
+			if (collection == null)
+			{
+				throw new ArgumentNullException(nameof(collection));
+			}
+
+			if (list is List<T> concrete)
+			{
+				concrete.AddRange(collection);
+			}
+			else
+			{
+				foreach (var item in collection)
+				{
+					list.Add(item);
+				}
+			}
+		}
+		/// <summary>
+		/// Removes elements which match the supplied predicate.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="list"></param>
+		/// <param name="match"></param>
+		public static int RemoveAll<T>(this IList<T> list, Predicate<T> match)
+		{
+			if (list == null)
+			{
+				throw new ArgumentNullException(nameof(list));
+			}
+			if (match == null)
+			{
+				throw new ArgumentNullException(nameof(match));
+			}
+
+			if (list is List<T> concrete)
+			{
+				return concrete.RemoveAll(match);
+			}
+			else
+			{
+				var removedCount = 0;
+				for (int i = list.Count - 1; i >= 0; --i)
+				{
+					if (match(list[i]))
+					{
+						list.RemoveAt(i);
+						++removedCount;
+					}
+				}
+				return removedCount;
+			}
+		}
+		/// <summary>
+		/// Gets the specified attribute from the supplied attributes.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="attrs"></param>
+		/// <returns></returns>
+		public static T GetAttribute<T>(this IEnumerable<Attribute> attrs)
+		{
+			foreach (var attr in attrs)
+			{
+				if (attr is T t)
+				{
+					return t;
+				}
+			}
+			return default;
+		}
+		/// <summary>
+		/// Tests whether the specified generic type is a parent of the current type or is the current type.
+		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="c"></param>
+		/// <returns></returns>
+		public static bool InheritsFromGeneric(this Type type, Type c)
+		{
+			if (!c.IsGenericType)
+			{
+				throw new ArgumentException($"Use {nameof(Type.IsAssignableFrom)} rather than this method if passing in a non generic type.");
+			}
+			if (type == typeof(object))
+			{
+				return false;
+			}
+			if (type == c || (type.IsGenericType && type.GetGenericTypeDefinition().IsAssignableFrom(c)))
+			{
+				return true;
+			}
+			return type.BaseType.InheritsFromGeneric(c);
+		}
+		/// <summary>
 		/// Short way to write ConfigureAwait(false).
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
@@ -304,83 +407,5 @@ namespace AdvorangesUtils
 		{
 			return task.ConfigureAwait(false);
 		}
-
-		private sealed class Part
-		{
-			private readonly bool _RemoveQuotes;
-			private readonly StringBuilder _SB = new StringBuilder();
-			private bool _StartsWithQuote;
-			private bool _EndsWithQuote;
-
-			public Part(bool removeQuotes)
-			{
-				_RemoveQuotes = removeQuotes;
-			}
-
-			public void AddChar(char c)
-			{
-				_SB.Append(c);
-				_EndsWithQuote = false;
-			}
-			public void AddQuoteChar(char c)
-			{
-				if (_SB.Length == 0)
-				{
-					_StartsWithQuote = true;
-				}
-				_SB.Append(c);
-				_EndsWithQuote = true;
-			}
-			public void Clear()
-			{
-				_SB.Clear();
-				_StartsWithQuote = false;
-				_EndsWithQuote = false;
-			}
-
-			public override string ToString()
-			{
-				var s = _SB.ToString();
-				if (_RemoveQuotes)
-				{
-					if (_StartsWithQuote)
-					{
-						s = s.Substring(1);
-					}
-					if (_EndsWithQuote)
-					{
-						s = s.Substring(0, s.Length - 1);
-					}
-				}
-				return s;
-			}
-		}
-	}
-
-	/// <summary>
-	/// What to do when duplicate sizes are found in image metadata.
-	/// </summary>
-	public enum DuplicateSizeMethod
-	{
-		/// <summary>
-		/// Return the smallest values of each.
-		/// </summary>
-		Minimum,
-		/// <summary>
-		/// Return the largest values of each.
-		/// </summary>
-		Maximum,
-		/// <summary>
-		/// Return the first values of each.
-		/// </summary>
-		First,
-		/// <summary>
-		/// Return the last values of each.
-		/// </summary>
-		Last,
-		/// <summary>
-		/// Throw an exception.
-		/// </summary>
-		Throw,
 	}
 }

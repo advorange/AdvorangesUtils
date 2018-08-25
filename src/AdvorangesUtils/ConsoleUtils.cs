@@ -26,7 +26,7 @@ namespace AdvorangesUtils
 			| ConsolePrintingFlags.RemoveMarkdown
 			| ConsolePrintingFlags.RemoveDuplicateNewLines;
 
-		private static readonly Object _MessageLock = new Object();
+		private static readonly object _MessageLock = new object();
 
 		/// <summary>
 		/// Writes the given text to the console with a timestamp and the calling method. Writes in gray by default.
@@ -84,8 +84,8 @@ namespace AdvorangesUtils
 			{
 				//To rethrow with the correct stacktrace
 				ExceptionDispatchInfo.Capture(e).Throw();
+				return;
 			}
-
 			WriteLine($"{Environment.NewLine}EXCEPTION: {e}{Environment.NewLine}", ConsoleColor.Red, name);
 		}
 		/// <summary>
@@ -98,33 +98,5 @@ namespace AdvorangesUtils
 		{
 			WriteLine(text, ConsoleColor.Cyan, name);
 		}
-	}
-
-	/// <summary>
-	/// Details about how to print from <see cref="ConsoleUtils"/>.
-	/// </summary>
-	[Flags]
-	public enum ConsolePrintingFlags : uint
-	{
-		/// <summary>
-		/// Whether or not to print. If this is false then this library will stop printing, and will throw all exceptions instead of writing them.
-		/// </summary>
-		Print = (1U << 0),
-		/// <summary>
-		/// Logs the time.
-		/// </summary>
-		LogTime = (1U << 1),
-		/// <summary>
-		/// Logs the calling method.
-		/// </summary>
-		LogCaller = (1U << 2),
-		/// <summary>
-		/// Removes markdown before printing.
-		/// </summary>
-		RemoveMarkdown = (1U << 3),
-		/// <summary>
-		/// Removes duplicate new lines before printing.
-		/// </summary>
-		RemoveDuplicateNewLines = (1U << 4),
 	}
 }
