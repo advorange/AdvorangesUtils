@@ -205,7 +205,7 @@ namespace AdvorangesUtils
 		/// </summary>
 		/// <param name="input"></param>
 		/// <returns></returns>
-		public static string[] SplitLikeCommandLine(this string input)
+		public static IEnumerable<string> SplitLikeCommandLine(this string input)
 		{
 			return input.ComplexSplit(new[] { ' ' }, new[] { '"' }, removeQuotes: true);
 		}
@@ -222,7 +222,7 @@ namespace AdvorangesUtils
 		/// <param name="quotes">What to not split when in between.</param>
 		/// <param name="removeQuotes">When a part has something from <paramref name="quotes"/> surrounding it they will be removed.</param>
 		/// <returns>An array of strings representing arguments.</returns>
-		public static string[] ComplexSplit(this string input, char[] seperators, char[] quotes, bool removeQuotes)
+		public static IEnumerable<string> ComplexSplit(this string input, IEnumerable<char> seperators, IEnumerable<char> quotes, bool removeQuotes)
 		{
 			if (seperators == null)
 			{
@@ -233,32 +233,29 @@ namespace AdvorangesUtils
 				throw new ArgumentException($"{nameof(quotes)} cannot be null.", nameof(quotes));
 			}
 
-			var parts = new List<string>();
 			var inside = false; //Whether or not the current part is inside an ignored
 			var part = new ComplexSplitPart(removeQuotes);
 			for (int i = 0; i < input.Length; ++i)
 			{
 				var c = input[i];
-				var q = quotes.Contains(c);
-				var s = seperators.Contains(c);
-				var e = i > 0 && input[i - 1] == '\\';
-
-				if (q && !e)
+				if (quotes.Contains(c))
 				{
 					inside = !inside;
 					part.AddQuoteChar(c);
 					continue;
 				}
-				if (s && !inside)
+				if (!inside && seperators.Contains(c))
 				{
-					parts.Add(part.ToString());
+					var currentString = part.ToString();
+					if (!string.IsNullOrWhiteSpace(currentString))
+					{
+						yield return currentString;
+					}
 					part.Clear();
 					continue;
 				}
 				part.AddChar(c);
 			}
-			parts.Add(part.ToString());
-			return parts.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
 		}
 		/// <summary>
 		/// Orders an <see cref="IEnumerable{T}"/> by something that does not implement <see cref="IComparable"/>.
@@ -291,7 +288,7 @@ namespace AdvorangesUtils
 		/// <typeparam name="T"></typeparam>
 		/// <param name="list"></param>
 		/// <param name="collection"></param>
-		public static void AddRange<T>(this IList<T> list, IEnumerable<T> collection)
+		public static void AddRange<T>(this ICollection<T> list, IEnumerable<T> collection)
 		{
 			if (list == null)
 			{
@@ -320,7 +317,7 @@ namespace AdvorangesUtils
 		/// <typeparam name="T"></typeparam>
 		/// <param name="list"></param>
 		/// <param name="match"></param>
-		public static int RemoveAll<T>(this IList<T> list, Predicate<T> match)
+		public static int RemoveAll<T>(this ICollection<T> list, Predicate<T> match)
 		{
 			if (list == null)
 			{
@@ -335,19 +332,45 @@ namespace AdvorangesUtils
 			{
 				return concrete.RemoveAll(match);
 			}
-			else
+			else if (list is IList<T> indexable)
 			{
 				var removedCount = 0;
 				for (int i = list.Count - 1; i >= 0; --i)
 				{
-					if (match(list[i]))
+					if (match(indexable[i]))
 					{
-						list.RemoveAt(i);
+						indexable.RemoveAt(i);
 						++removedCount;
 					}
 				}
 				return removedCount;
 			}
+			else
+			{
+				var removedCount = 0;
+				for (int i = list.Count - 1; i >= 0; --i)
+				{
+					var element = list.ElementAt(i);
+					if (match(element))
+					{
+						list.Remove(element);
+						++removedCount;
+					}
+				}
+				return removedCount;
+			}
+		}
+		/// <summary>
+		/// Removes elements which are equal according to the supplied equality comparer.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="list"></param>
+		/// <param name="value"></param>
+		/// <param name="equalityComparer"></param>
+		/// <returns></returns>
+		public static int RemoveAll<T>(this ICollection<T> list, T value, IEqualityComparer<T> equalityComparer)
+		{
+			return list.RemoveAll(x => equalityComparer.Equals(x, value));
 		}
 		/// <summary>
 		/// Gets the specified attribute from the supplied attributes.
