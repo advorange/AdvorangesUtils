@@ -9,6 +9,8 @@ namespace AdvorangesUtils
 		private bool _StartsWithQuote;
 		private bool _EndsWithQuote;
 
+		public int Length => _SB.Length;
+
 		public ComplexSplitPart(bool removeQuotes)
 		{
 			_RemoveQuotes = removeQuotes;

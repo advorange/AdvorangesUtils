@@ -207,7 +207,7 @@ namespace AdvorangesUtils
 		/// <returns></returns>
 		public static IEnumerable<string> SplitLikeCommandLine(this string input)
 		{
-			return input.ComplexSplit(new[] { ' ' }, new[] { '"' }, removeQuotes: true);
+			return input.ComplexSplit(new[] { ' ' }, new[] { '"' }, removeQuotes: false);
 		}
 		/// <summary>
 		/// Splits a string by the characters passed in <paramref name="seperators"/> unless they're inside <paramref name="quotes"/>.
@@ -246,15 +246,18 @@ namespace AdvorangesUtils
 				}
 				if (!inside && seperators.Contains(c))
 				{
-					var currentString = part.ToString();
-					if (!string.IsNullOrWhiteSpace(currentString))
+					if (part.Length > 0)
 					{
-						yield return currentString;
+						yield return part.ToString();
 					}
 					part.Clear();
 					continue;
 				}
 				part.AddChar(c);
+			}
+			if (part.Length > 0)
+			{
+				yield return part.ToString();
 			}
 		}
 		/// <summary>

@@ -1,6 +1,7 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
+using System.Linq;
 using System.Text;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AdvorangesUtils.Tests
 {
@@ -70,15 +71,27 @@ namespace AdvorangesUtils.Tests
 		[TestMethod]
 		public void ComplexSplit_Test()
 		{
-			Assert.AreEqual(9, "The quick brown fox jumps over the lazy dog".SplitLikeCommandLine().Length);
-			Assert.AreEqual(7, "The \"quick brown\" fox jumps \"over the\" lazy dog".SplitLikeCommandLine().Length);
-			Assert.AreEqual(4, "The quick brown\" fox jumps \"over the\" lazy dog".SplitLikeCommandLine().Length);
-			Assert.AreEqual(2, "The \"quick brown fox \\jumps over the lazy dog".SplitLikeCommandLine().Length);
-			Assert.AreEqual(9, "The \\\"quick brown fox jumps over the lazy dog".SplitLikeCommandLine().Length);
-			Assert.AreEqual(7, "The [quick brown] fox jumps [over the] lazy dog".ComplexSplit(new[] { ' ' }, new[] { '[', ']' }, true).Length);
-			Assert.AreEqual(8, "The \\[quick brown\\] fox jumps [over the] lazy dog".ComplexSplit(new[] { ' ' }, new[] { '[', ']' }, true).Length);
-			Assert.AreEqual(4, "The \\[quick brown] fox jumps [over the] lazy dog".ComplexSplit(new[] { ' ' }, new[] { '[', ']' }, true).Length);
-			Assert.AreEqual(2, "test=\"value;;;;aaa\";\ntest2=\"value2\";".ComplexSplit(new[] { ';' }, new[] { '"' }, true).Length);
+			Assert.AreEqual(9, "The quick brown fox jumps over the lazy dog".SplitLikeCommandLine().Count());
+			Assert.AreEqual(7, "The \"quick brown\" fox jumps \"over the\" lazy dog".SplitLikeCommandLine().Count());
+			Assert.AreEqual(4, "The quick brown\" fox jumps \"over the\" lazy dog".SplitLikeCommandLine().Count());
+			Assert.AreEqual(2, "The \"quick brown fox \\jumps over the lazy dog".SplitLikeCommandLine().Count());
+			Assert.AreEqual(7, "The [quick brown] fox jumps [over the] lazy dog".ComplexSplit(new[] { ' ' }, new[] { '[', ']' }, true).Count());
+			Assert.AreEqual(2, "test=\"value;;;;aaa\";\ntest2=\"value2\";".ComplexSplit(new[] { ';' }, new[] { '"' }, true).Count());
+
+			var split = $"-Grandparent \"-Parent \"-Child \"-Name \"-Name \"Test Value\"\" -Text TestText\"\" -Text Dog\" -Number 1".SplitLikeCommandLine().ToArray();
+			var expected = new[]
+			{
+				"-Grandparent",
+				"\"-Parent \"-Child",
+				"\"-Name \"-Name",
+				"\"Test Value\"\" -Text TestText\"\" -Text Dog\"",
+				"-Number",
+				"1",
+			};
+			for (int i = 0; i < split.Length; ++i)
+			{
+				Assert.AreEqual(expected[i], split[i]);
+			}
 		}
 		[TestMethod]
 		public void IsValidUrl_Test()
