@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace AdvorangesUtils
@@ -26,7 +27,7 @@ namespace AdvorangesUtils
 				case MemberTypes.Property:
 					return ((PropertyInfo)member).PropertyType;
 				default:
-					throw new ArgumentException("Input MemberInfo must be EventInfo, FieldInfo, MethodInfo, or PropertyInfo.");
+					throw new ArgumentException($"Must be {nameof(EventInfo)}, {nameof(FieldInfo)}, {nameof(MethodInfo)}, or {nameof(PropertyInfo)}.", nameof(member));
 			}
 		}
 		/// <summary>
@@ -44,7 +45,7 @@ namespace AdvorangesUtils
 				case MemberTypes.Property:
 					return ((PropertyInfo)member).GetValue(obj);
 				default:
-					throw new ArgumentException("Input MemberInfo must be FieldInfo or PropertyInfo.");
+					throw new ArgumentException($"Must be {nameof(FieldInfo)} or {nameof(PropertyInfo)}.", nameof(member));
 			}
 		}
 		/// <summary>
@@ -64,8 +65,47 @@ namespace AdvorangesUtils
 					((PropertyInfo)member).SetValue(obj, value);
 					return;
 				default:
-					throw new ArgumentException("Input MemberInfo must be FieldInfo or PropertyInfo.");
+					throw new ArgumentException($"Must be {nameof(FieldInfo)} or {nameof(PropertyInfo)}.", nameof(member));
 			}
+		}
+		/// <summary>
+		/// Tests whether the specified generic type is a parent of the current type or is the current type.
+		/// </summary>
+		/// <param name="type"></param>
+		/// <param name="c"></param>
+		/// <returns></returns>
+		public static bool InheritsFromGeneric(this Type type, Type c)
+		{
+			if (!c.IsGenericType)
+			{
+				throw new ArgumentException($"Use {nameof(Type.IsAssignableFrom)} rather than this method if passing in a non generic type.");
+			}
+			if (type == typeof(object))
+			{
+				return false;
+			}
+			if (type == c || (type.IsGenericType && type.GetGenericTypeDefinition().IsAssignableFrom(c)))
+			{
+				return true;
+			}
+			return type.BaseType.InheritsFromGeneric(c);
+		}
+		/// <summary>
+		/// Gets the specified attribute from the supplied attributes.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="attrs"></param>
+		/// <returns></returns>
+		public static T GetAttribute<T>(this IEnumerable<Attribute> attrs)
+		{
+			foreach (var attr in attrs)
+			{
+				if (attr is T t)
+				{
+					return t;
+				}
+			}
+			return default;
 		}
 	}
 }

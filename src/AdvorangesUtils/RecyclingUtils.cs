@@ -65,7 +65,7 @@ namespace AdvorangesUtils
 			if (_CanRecycle)
 			{
 				//Files need to be joined with null char and entire string needs to end with it too
-				return Move(string.Join("\0", files.Select(x => x.FullName)) + "\0");
+				return Move(files.Select(x => x.FullName).Join("\0") + "\0");
 			}
 			foreach (var file in files)
 			{

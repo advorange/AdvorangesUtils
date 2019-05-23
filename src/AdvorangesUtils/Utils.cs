@@ -21,9 +21,7 @@ namespace AdvorangesUtils
 		/// <param name="str2"></param>
 		/// <returns></returns>
 		public static bool CaseInsEquals(this string str1, string str2)
-		{
-			return string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
-		}
+			=> string.Equals(str1, str2, StringComparison.OrdinalIgnoreCase);
 		/// <summary>
 		/// Utilizes <see cref="StringComparison.OrdinalIgnoreCase"/> to check if a string contains a search string.
 		/// </summary>
@@ -31,9 +29,7 @@ namespace AdvorangesUtils
 		/// <param name="search"></param>
 		/// <returns></returns>
 		public static bool CaseInsContains(this string source, string search)
-		{
-			return source != null && search != null && source.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
-		}
+			=> source != null && search != null && source.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
 		/// <summary>
 		/// Utilizes <see cref="StringComparison.OrdinalIgnoreCase"/> to return the index of a search string.
 		/// </summary>
@@ -42,9 +38,7 @@ namespace AdvorangesUtils
 		/// <param name="index"></param>
 		/// <returns></returns>
 		public static bool CaseInsIndexOf(this string source, string search, out int index)
-		{
-			return (index = source == null || search == null ? -1 : source.IndexOf(search, StringComparison.OrdinalIgnoreCase)) >= 0;
-		}
+			=> (index = source == null || search == null ? -1 : source.IndexOf(search, StringComparison.OrdinalIgnoreCase)) >= 0;
 		/// <summary>
 		/// Utilizes <see cref="StringComparison.OrdinalIgnoreCase"/> to check if a string ends with a search string.
 		/// </summary>
@@ -52,9 +46,7 @@ namespace AdvorangesUtils
 		/// <param name="search"></param>
 		/// <returns></returns>
 		public static bool CaseInsStartsWith(this string source, string search)
-		{
-			return source != null && search != null && source.StartsWith(search, StringComparison.OrdinalIgnoreCase);
-		}
+			=> source != null && search != null && source.StartsWith(search, StringComparison.OrdinalIgnoreCase);
 		/// <summary>
 		/// Utilizes <see cref="StringComparison.OrdinalIgnoreCase"/> to check if a string ends with a search string.
 		/// </summary>
@@ -62,9 +54,7 @@ namespace AdvorangesUtils
 		/// <param name="search"></param>
 		/// <returns></returns>
 		public static bool CaseInsEndsWith(this string source, string search)
-		{
-			return source != null && search != null && source.EndsWith(search, StringComparison.OrdinalIgnoreCase);
-		}
+			=> source != null && search != null && source.EndsWith(search, StringComparison.OrdinalIgnoreCase);
 		/// <summary>
 		/// Returns the string with the oldValue replaced with the newValue case insensitively.
 		/// </summary>
@@ -112,27 +102,22 @@ namespace AdvorangesUtils
 		/// <param name="search"></param>
 		/// <returns></returns>
 		public static bool CaseInsContains(this IEnumerable<string> enumerable, string search)
-		{
-			return enumerable.Contains(search, StringComparer.OrdinalIgnoreCase);
-		}
+			=> enumerable.Contains(search, StringComparer.OrdinalIgnoreCase);
+
 		/// <summary>
 		/// Returns true if the passed in string is a valid url.
 		/// </summary>
 		/// <param name="input">The uri to evaluate.</param>
 		/// <returns>A boolean indicating whether or not the string is a url.</returns>
 		public static bool IsValidUrl(this string input)
-		{
-			return Uri.TryCreate(input, UriKind.Absolute, out Uri uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
-		}
+			=> Uri.TryCreate(input, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
 		/// <summary>
 		/// Returns true if the passed in uri is a valid url.
 		/// </summary>
 		/// <param name="uri">The uri to evaluate.</param>
 		/// <returns>A boolean indicating whether or not the uri is a url.</returns>
 		public static bool IsValidUrl(this Uri uri)
-		{
-			return uri.IsAbsoluteUri && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
-		}
+			=> uri.IsAbsoluteUri && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
 		/// <summary>
 		/// Returns true for most image mime types (png, jpg, tiff, etc) but false for gif and anything else.
 		/// </summary>
@@ -150,18 +135,14 @@ namespace AdvorangesUtils
 		/// <param name="limit"></param>
 		/// <returns></returns>
 		public static bool AllCharsWithinLimit(this string str, int limit = 1000)
-		{
-			return !str.Any(x => x > limit);
-		}
+			=> !str.Any(x => x > limit);
 		/// <summary>
 		/// Returns the count of characters equal to \r or \n.
 		/// </summary>
 		/// <param name="str"></param>
 		/// <returns></returns>
 		public static int CountLineBreaks(this string str)
-		{
-			return str?.Count(x => x == '\r' || x == '\n') ?? 0;
-		}
+			=> str?.Count(x => x == '\r' || x == '\n') ?? 0;
 		/// <summary>
 		/// Gets the width and height of an image through metadata.
 		/// If multiple widths and heights are gotten via metadata, will return the smallest ones.
@@ -175,8 +156,8 @@ namespace AdvorangesUtils
 			try
 			{
 				var tags = ImageMetadataReader.ReadMetadata(s).SelectMany(x => x.Tags);
-				var width = tags.Where(x => x.Name == "Image Width").Select(x => Convert.ToInt32(x.Description.Split(' ')[0]));
-				var height = tags.Where(x => x.Name == "Image Height").Select(x => Convert.ToInt32(x.Description.Split(' ')[0]));
+				var width = tags.SelectWhere(x => x.Name == "Image Width", x => Convert.ToInt32(x.Description.Split(' ')[0]));
+				var height = tags.SelectWhere(x => x.Name == "Image Height", x => Convert.ToInt32(x.Description.Split(' ')[0]));
 				if (width.Count() > 1 || height.Count() > 1)
 				{
 					switch (method)
@@ -206,9 +187,7 @@ namespace AdvorangesUtils
 		/// <param name="input"></param>
 		/// <returns></returns>
 		public static IEnumerable<string> SplitLikeCommandLine(this string input)
-		{
-			return input.ComplexSplit(new[] { ' ' }, new[] { '"' }, removeQuotes: false);
-		}
+			=> input.ComplexSplit(new[] { ' ' }, new[] { '"' }, removeQuotes: false);
 		/// <summary>
 		/// Splits a string by the characters passed in <paramref name="seperators"/> unless they're inside <paramref name="quotes"/>.
 		/// </summary>
@@ -235,7 +214,7 @@ namespace AdvorangesUtils
 
 			var inside = false; //Whether or not the current part is inside an ignored
 			var part = new ComplexSplitPart(removeQuotes);
-			for (int i = 0; i < input.Length; ++i)
+			for (var i = 0; i < input.Length; ++i)
 			{
 				var c = input[i];
 				if (quotes.Contains(c))
@@ -260,17 +239,80 @@ namespace AdvorangesUtils
 				yield return part.ToString();
 			}
 		}
+
 		/// <summary>
 		/// Orders an <see cref="IEnumerable{T}"/> by something that does not implement <see cref="IComparable"/>.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <typeparam name="TKey"></typeparam>
-		/// <param name="input">The objects to order.</param>
+		/// <param name="source">The objects to order.</param>
 		/// <param name="keySelector">The property to order by.</param>
 		/// <returns>An ordered enumerable.</returns>
-		public static IEnumerable<T> OrderByNonComparable<T, TKey>(this IEnumerable<T> input, Func<T, TKey> keySelector)
+		public static IEnumerable<T> OrderByNonComparable<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector)
 		{
-			return input.GroupBy(keySelector).SelectMany(x => x);
+			if (source == null)
+			{
+				throw new ArgumentNullException(nameof(source));
+			}
+			if (keySelector == null)
+			{
+				throw new ArgumentNullException(nameof(keySelector));
+			}
+
+			return source.GroupBy(keySelector).SelectMany(x => x);
+		}
+		/// <summary>
+		/// Makes the source distinct by a selected property.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <typeparam name="TKey"></typeparam>
+		/// <param name="source"></param>
+		/// <param name="keySelector"></param>
+		/// <returns></returns>
+		public static IEnumerable<T> DistinctBy<T, TKey>(this IEnumerable<T> source, Func<T, TKey> keySelector)
+		{
+			if (source == null)
+			{
+				throw new ArgumentNullException(nameof(source));
+			}
+			if (keySelector == null)
+			{
+				throw new ArgumentNullException(nameof(keySelector));
+			}
+
+			return source.GroupBy(keySelector).Select(x => x.First());
+		}
+		/// <summary>
+		/// Makes the source into a new type while also only working on the wanted items.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <typeparam name="TResult"></typeparam>
+		/// <param name="source">The objects to select where from.</param>
+		/// <param name="predicate">The function declaring what items to select.</param>
+		/// <param name="selector">The function declaring how to convert the items.</param>
+		/// <returns></returns>
+		public static IEnumerable<TResult> SelectWhere<T, TResult>(this IEnumerable<T> source, Func<T, bool> predicate, Func<T, TResult> selector)
+		{
+			if (source == null)
+			{
+				throw new ArgumentNullException(nameof(source));
+			}
+			if (predicate == null)
+			{
+				throw new ArgumentNullException(nameof(predicate));
+			}
+			if (selector == null)
+			{
+				throw new ArgumentNullException(nameof(selector));
+			}
+
+			foreach (var item in source)
+			{
+				if (predicate(item))
+				{
+					yield return selector(item);
+				}
+			}
 		}
 		/// <summary>
 		/// Puts an <see cref="IEnumerable{T}"/> into a variable amount of <see cref="IEnumerable{T}"/> with each containing <paramref name="groupSize"/> elements.
@@ -281,28 +323,98 @@ namespace AdvorangesUtils
 		/// <returns></returns>
 		public static IEnumerable<IEnumerable<T>> GroupInto<T>(this IEnumerable<T> source, int groupSize)
 		{
+			if (source == null)
+			{
+				throw new ArgumentNullException(nameof(source));
+			}
+
 			return source.Select((obj, index) => new { Obj = obj, Index = index })
 				.GroupBy(x => x.Index / groupSize)
 				.Select(g => g.Select(o => o.Obj));
 		}
 		/// <summary>
+		/// Attempts to get the first matching value. Will return default if no matches are found.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source"></param>
+		/// <param name="predicate"></param>
+		/// <param name="found"></param>
+		/// <returns></returns>
+		public static bool TryGetFirst<T>(this IEnumerable<T> source, Func<T, bool> predicate, out T found)
+		{
+			if (source == null)
+			{
+				throw new ArgumentNullException(nameof(source));
+			}
+			if (predicate == null)
+			{
+				throw new ArgumentNullException(nameof(predicate));
+			}
+
+			found = default;
+			foreach (var item in source)
+			{
+				if (predicate(item))
+				{
+					found = item;
+					return true;
+				}
+			}
+			return false;
+		}
+		/// <summary>
+		/// Attempts to get a single matching value. Will throw if more than one match is found. Will return default if no matches are found.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="source"></param>
+		/// <param name="predicate"></param>
+		/// <param name="found"></param>
+		/// <returns></returns>
+		public static bool TryGetSingle<T>(this IEnumerable<T> source, Func<T, bool> predicate, out T found)
+		{
+			if (source == null)
+			{
+				throw new ArgumentNullException(nameof(source));
+			}
+			if (predicate == null)
+			{
+				throw new ArgumentNullException(nameof(predicate));
+			}
+
+			found = default;
+			var matched = false;
+			foreach (var item in source)
+			{
+				if (predicate(item))
+				{
+					if (matched)
+					{
+						throw new InvalidOperationException("More than one match found.");
+					}
+					found = item;
+					matched = true;
+				}
+			}
+			return matched;
+		}
+		/// <summary>
 		/// Adds all of the collection to the list.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
-		/// <param name="list"></param>
+		/// <param name="source"></param>
 		/// <param name="collection"></param>
-		public static void AddRange<T>(this ICollection<T> list, IEnumerable<T> collection)
+		public static void AddRange<T>(this ICollection<T> source, IEnumerable<T> collection)
 		{
-			if (list == null)
+			if (source == null)
 			{
-				throw new ArgumentNullException(nameof(list));
+				throw new ArgumentNullException(nameof(source));
 			}
 			if (collection == null)
 			{
 				throw new ArgumentNullException(nameof(collection));
 			}
 
-			if (list is List<T> concrete)
+			if (source is List<T> concrete)
 			{
 				concrete.AddRange(collection);
 			}
@@ -310,7 +422,7 @@ namespace AdvorangesUtils
 			{
 				foreach (var item in collection)
 				{
-					list.Add(item);
+					source.Add(item);
 				}
 			}
 		}
@@ -318,27 +430,27 @@ namespace AdvorangesUtils
 		/// Removes elements which match the supplied predicate.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
-		/// <param name="list"></param>
+		/// <param name="source"></param>
 		/// <param name="match"></param>
-		public static int RemoveAll<T>(this ICollection<T> list, Predicate<T> match)
+		public static int RemoveAll<T>(this ICollection<T> source, Predicate<T> match)
 		{
-			if (list == null)
+			if (source == null)
 			{
-				throw new ArgumentNullException(nameof(list));
+				throw new ArgumentNullException(nameof(source));
 			}
 			if (match == null)
 			{
 				throw new ArgumentNullException(nameof(match));
 			}
 
-			if (list is List<T> concrete)
+			if (source is List<T> concrete)
 			{
 				return concrete.RemoveAll(match);
 			}
-			else if (list is IList<T> indexable)
+			else if (source is IList<T> indexable)
 			{
 				var removedCount = 0;
-				for (int i = list.Count - 1; i >= 0; --i)
+				for (var i = source.Count - 1; i >= 0; --i)
 				{
 					if (match(indexable[i]))
 					{
@@ -351,12 +463,12 @@ namespace AdvorangesUtils
 			else
 			{
 				var removedCount = 0;
-				for (int i = list.Count - 1; i >= 0; --i)
+				for (var i = source.Count - 1; i >= 0; --i)
 				{
-					var element = list.ElementAt(i);
+					var element = source.ElementAt(i);
 					if (match(element))
 					{
-						list.Remove(element);
+						source.Remove(element);
 						++removedCount;
 					}
 				}
@@ -367,53 +479,13 @@ namespace AdvorangesUtils
 		/// Removes elements which are equal according to the supplied equality comparer.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
-		/// <param name="list"></param>
+		/// <param name="source"></param>
 		/// <param name="value"></param>
 		/// <param name="equalityComparer"></param>
 		/// <returns></returns>
-		public static int RemoveAll<T>(this ICollection<T> list, T value, IEqualityComparer<T> equalityComparer)
-		{
-			return list.RemoveAll(x => equalityComparer.Equals(x, value));
-		}
-		/// <summary>
-		/// Gets the specified attribute from the supplied attributes.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="attrs"></param>
-		/// <returns></returns>
-		public static T GetAttribute<T>(this IEnumerable<Attribute> attrs)
-		{
-			foreach (var attr in attrs)
-			{
-				if (attr is T t)
-				{
-					return t;
-				}
-			}
-			return default;
-		}
-		/// <summary>
-		/// Tests whether the specified generic type is a parent of the current type or is the current type.
-		/// </summary>
-		/// <param name="type"></param>
-		/// <param name="c"></param>
-		/// <returns></returns>
-		public static bool InheritsFromGeneric(this Type type, Type c)
-		{
-			if (!c.IsGenericType)
-			{
-				throw new ArgumentException($"Use {nameof(Type.IsAssignableFrom)} rather than this method if passing in a non generic type.");
-			}
-			if (type == typeof(object))
-			{
-				return false;
-			}
-			if (type == c || (type.IsGenericType && type.GetGenericTypeDefinition().IsAssignableFrom(c)))
-			{
-				return true;
-			}
-			return type.BaseType.InheritsFromGeneric(c);
-		}
+		public static int RemoveAll<T>(this ICollection<T> source, T value, IEqualityComparer<T> equalityComparer)
+			=> source.RemoveAll(x => equalityComparer.Equals(x, value));
+
 		/// <summary>
 		/// Short way to write ConfigureAwait(false).
 		/// </summary>
@@ -421,17 +493,13 @@ namespace AdvorangesUtils
 		/// <param name="task"></param>
 		/// <returns></returns>
 		public static ConfiguredTaskAwaitable<T> CAF<T>(this Task<T> task)
-		{
-			return task.ConfigureAwait(false);
-		}
+			=> task.ConfigureAwait(false);
 		/// <summary>
 		/// Short way to write ConfigureAwait(false).
 		/// </summary>
 		/// <param name="task"></param>
 		/// <returns></returns>
 		public static ConfiguredTaskAwaitable CAF(this Task task)
-		{
-			return task.ConfigureAwait(false);
-		}
+			=> task.ConfigureAwait(false);
 	}
 }

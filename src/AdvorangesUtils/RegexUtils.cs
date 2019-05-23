@@ -37,8 +37,6 @@ namespace AdvorangesUtils
 		/// <param name="input">The Twitch name to check.</param>
 		/// <returns>Whether or not the input is a valid Twitch name.</returns>
 		public static bool IsValidTwitchName(string input)
-		{
-			return string.IsNullOrEmpty(input) ? true : _TwitchRegex.IsMatch(input);
-		}
+			=> string.IsNullOrEmpty(input) || _TwitchRegex.IsMatch(input);
 	}
 }

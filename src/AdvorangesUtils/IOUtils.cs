@@ -41,9 +41,7 @@ namespace AdvorangesUtils
 		/// <param name="settings">The json settings to use. If null, uses settings that parse enums as strings and ignores errors.</param>
 		/// <returns>The serialized object.</returns>
 		public static string Serialize(object obj, JsonSerializerSettings settings = null)
-		{
-			return JsonConvert.SerializeObject(obj, Formatting.Indented, settings ?? DefaultSerializingSettings);
-		}
+			=> JsonConvert.SerializeObject(obj, Formatting.Indented, settings ?? DefaultSerializingSettings);
 		/// <summary>
 		/// Creates an object of type <typeparamref name="T"/> with the supplied string and type.
 		/// If unable to create an object, will return the default value.
@@ -95,9 +93,7 @@ namespace AdvorangesUtils
 		/// <param name="catchInside">Whether or not to catch <see cref="JsonReaderException"/> inside the method.</param>
 		/// <returns>The file's text put into the object, or, if deserialization failed, default.</returns>
 		public static T DeserializeFromFile<T>(FileInfo file, JsonSerializerSettings settings = null, JsonFix[] fixes = null, bool catchInside = true)
-		{
-			return file.Exists ? Deserialize<T>(File.ReadAllText(file.FullName), settings, fixes, catchInside) : default;
-		}
+			=> file.Exists ? Deserialize<T>(File.ReadAllText(file.FullName), settings, fixes, catchInside) : default;
 		/// <summary>
 		/// Writes an uncaught exception to a log file in the current directory.
 		/// </summary>
@@ -125,10 +121,7 @@ namespace AdvorangesUtils
 			if (!File.Exists(file.FullName))
 			{
 				Directory.CreateDirectory(Path.GetDirectoryName(file.FullName));
-				using (var fs = file.Create())
-				{
-					fs.Close();
-				}
+				using (var fs = File.AppendText(file.FullName)) { }
 			}
 			File.WriteAllText(file.FullName, text);
 		}

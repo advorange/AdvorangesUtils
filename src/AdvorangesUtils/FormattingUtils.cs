@@ -14,13 +14,39 @@ namespace AdvorangesUtils
 		/// <summary>
 		/// Joins all strings which are not null with the given string.
 		/// </summary>
+		/// <typeparam name="T">The type of arguments being passed in.</typeparam>
+		/// <param name="source">The strings to join.</param>
 		/// <param name="seperator">The value to join each string with.</param>
-		/// <param name="values">The strings to join.</param>
+		/// <param name="selector">How to convert each value to a string.</param>
 		/// <returns>All strings which were not null joined together.</returns>
-		public static string JoinNonNullStrings(this IEnumerable<string> values, string seperator)
-		{
-			return string.Join(seperator, values.Where(x => !string.IsNullOrWhiteSpace(x)));
-		}
+		public static string JoinNonNullValues<T>(this IEnumerable<T> source, string seperator, Func<T, string> selector)
+			=> source.SelectWhere(x => x != null, selector).JoinNonNullStrings(seperator);
+		/// <summary>
+		/// Joins all strings which are not null with the given string.
+		/// </summary>
+		/// <param name="source">The strings to join.</param>
+		/// <param name="seperator">The value to join each string with.</param>
+		/// <returns>All strings which were not null joined together.</returns>
+		public static string JoinNonNullStrings(this IEnumerable<string> source, string seperator)
+			=> source.Where(x => x != null).Join(seperator);
+		/// <summary>
+		/// Joins the strings together after selecting them.
+		/// </summary>
+		/// <typeparam name="T">The type of arguments being passed in.</typeparam>
+		/// <param name="source">The values to join.</param>
+		/// <param name="seperator">The value to join each string with.</param>
+		/// <param name="selector">How to convert each value to a string.</param>
+		/// <returns>All strings joined together.</returns>
+		public static string Join<T>(this IEnumerable<T> source, string seperator, Func<T, string> selector)
+			=> source.Select(selector).Join(seperator);
+		/// <summary>
+		/// Joins the strings together after selecting them.
+		/// </summary>
+		/// <param name="source">The values to join.</param>
+		/// <param name="seperator">The value to join each string with.</param>
+		/// <returns>All strings joined together.</returns>
+		public static string Join(this IEnumerable<string> source, string seperator)
+			=> string.Join(seperator, source);
 		/// <summary>
 		/// Returns a string which is a numbered list of the passed in objects. The format is for the passed in arguments; the counter is added by default.
 		/// </summary>
@@ -30,9 +56,9 @@ namespace AdvorangesUtils
 		/// <returns>A numbered list of objects formatted in the supplied way.</returns>
 		public static string FormatNumberedList<T>(this IEnumerable<T> values, Func<T, string> func)
 		{
-			var list = values.ToList();
-			var maxLen = list.Count.ToString().Length;
-			return string.Join("\n", list.Select((x, index) => $"`{(index + 1).ToString().PadLeft(maxLen, '0')}.` {func(x)}"));
+			var list = values.ToArray();
+			var maxLen = list.Length.ToString().Length;
+			return list.Select((x, index) => $"`{(index + 1).ToString().PadLeft(maxLen, '0')}.` {func(x)}").Join("\n");
 		}
 		/// <summary>
 		/// Returns the input string with ` escaped.
@@ -40,18 +66,14 @@ namespace AdvorangesUtils
 		/// <param name="input">The input to escape backticks from.</param>
 		/// <returns>The input with escaped backticks.</returns>
 		public static string EscapeBackTicks(this string input)
-		{
-			return input?.Replace("`", "\\`");
-		}
+			=> input?.Replace("`", "\\`");
 		/// <summary>
 		/// Returns the input string without \, *, _, ~, and `.
 		/// </summary>
 		/// <param name="input">The input to remove markdown from.</param>
 		/// <returns>The input without any markdown.</returns>
 		public static string RemoveAllMarkdown(this string input)
-		{
-			return input?.Replace("\\", "")?.Replace("*", "")?.Replace("_", "")?.Replace("~", "")?.Replace("`", "");
-		}
+			=> input?.Replace("\\", "")?.Replace("*", "")?.Replace("_", "")?.Replace("~", "")?.Replace("`", "");
 		/// <summary>
 		/// Returns the input string with no duplicate new lines. Also changes any carriage returns to new lines.
 		/// </summary>
@@ -60,7 +82,7 @@ namespace AdvorangesUtils
 		public static string RemoveDuplicateNewLines(this string input)
 		{
 			var str = input.Replace("\r", "\n");
-			var len = str.Length;
+			int len;
 			do
 			{
 				len = str.Length;
@@ -96,12 +118,10 @@ namespace AdvorangesUtils
 		/// <param name="value">The text to append before the new line.</param>
 		/// <returns>The stringbuilder that was passed in.</returns>
 		public static StringBuilder AppendLineFeed(this StringBuilder sb, string value = "")
-		{
-			return sb.Append(value + "\n");
-		}
+			=> sb.Append(value + "\n");
 
 		/// <summary>
-		/// Returns a formatted string displaying the bot's current uptime.
+		/// Returns a formatted string displaying the bot's current uptime in the format of 1:24:60:60.
 		/// </summary>
 		/// <returns>Formatted string displaying how long the program has been running.</returns>
 		public static string GetUptime()
@@ -114,9 +134,13 @@ namespace AdvorangesUtils
 		/// </summary>
 		/// <returns>Formatted string for use in file names.</returns>
 		public static string ToSaving()
-		{
-			return DateTime.UtcNow.ToString("yyyyMMdd_hhmmss");
-		}
+			=> DateTime.UtcNow.ToSaving();
+		/// <summary>
+		/// Returns the time in a year, month, day, hour, minute, second format. E.G: 20170815_053645
+		/// </summary>
+		/// <returns>Formatted string for use in file names.</returns>
+		public static string ToSaving(this DateTime dt)
+			=> dt.ToString("yyyyMMdd_hhmmss");
 		/// <summary>
 		/// Returns the passed in time as a human readable time.
 		/// </summary>
@@ -134,8 +158,6 @@ namespace AdvorangesUtils
 		/// <param name="dt">The datetime to format.</param>
 		/// <returns>Formatted string that says when something was created with markdown.</returns>
 		public static string ToCreatedAt(this DateTime dt)
-		{
-			return $"**Created:** `{ToReadable(dt)}` (`{DateTime.UtcNow.Subtract(dt).TotalDays:0.00}` days ago)";
-		}
+			=> $"**Created:** `{ToReadable(dt)}` (`{DateTime.UtcNow.Subtract(dt).TotalDays:0.00}` days ago)";
 	}
 }

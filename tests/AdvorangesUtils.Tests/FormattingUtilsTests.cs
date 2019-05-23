@@ -6,6 +6,24 @@ namespace AdvorangesUtils.Tests
 	public class FormattingUtilsTests
 	{
 		[TestMethod]
+		public void JoinNonNullValues_Test()
+		{
+			var values = new object[]
+			{
+				null,
+				1,
+				null,
+				"fish",
+				null,
+				null,
+				null,
+				"dog",
+			};
+
+			Assert.AreEqual("1fishdog", values.JoinNonNullValues("", x => x.ToString()));
+			Assert.AreEqual("1 fish dog", values.JoinNonNullValues(" ", x => x.ToString()));
+		}
+		[TestMethod]
 		public void JoinNonNullStrings_Test()
 		{
 			var strings = new[]
@@ -17,11 +35,37 @@ namespace AdvorangesUtils.Tests
 				null,
 				null,
 				null,
-				"dog"
+				"dog",
 			};
 
 			Assert.AreEqual("dogfishdog", strings.JoinNonNullStrings(""));
 			Assert.AreEqual("dog fish dog", strings.JoinNonNullStrings(" "));
+		}
+		[TestMethod]
+		public void JoinGeneric_Test()
+		{
+			var values = new object[]
+			{
+				1,
+				2,
+				3,
+			};
+
+			Assert.AreEqual("123", values.Join("", x => x.ToString()));
+			Assert.AreEqual("1 2 3", values.Join(" ", x => x.ToString()));
+		}
+		[TestMethod]
+		public void Join_Test()
+		{
+			var values = new[]
+			{
+				"dog",
+				"cat",
+				"bat",
+			};
+
+			Assert.AreEqual("dogcatbat", values.Join(""));
+			Assert.AreEqual("dog cat bat", values.Join(" "));
 		}
 		[TestMethod]
 		public void FormatNumberedList_Test()

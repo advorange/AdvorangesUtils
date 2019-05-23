@@ -15,7 +15,7 @@ namespace AdvorangesUtils
 		/// <summary>
 		/// The lines which have been written to the console.
 		/// </summary>
-		public static ConcurrentDictionary<string, List<string>> WrittenLines { get; } = new ConcurrentDictionary<string, List<string>>();
+		public static ConcurrentDictionary<string, ConcurrentBag<string>> WrittenLines { get; } = new ConcurrentDictionary<string, ConcurrentBag<string>>();
 		/// <summary>
 		/// The settings detailing how to print with the console.
 		/// </summary>
@@ -68,7 +68,7 @@ namespace AdvorangesUtils
 
 				if (!WrittenLines.TryGetValue(name, out var list))
 				{
-					WrittenLines.TryAdd(name, list = new List<string>());
+					WrittenLines.TryAdd(name, list = new ConcurrentBag<string>());
 				}
 				list.Add(text);
 			}
@@ -95,8 +95,6 @@ namespace AdvorangesUtils
 		/// <param name="name">The calling method.</param>
 		[Conditional("DEBUG")]
 		public static void DebugWrite(string text, [CallerMemberName] string name = "")
-		{
-			WriteLine(text, ConsoleColor.Cyan, name);
-		}
+			=> WriteLine(text, ConsoleColor.Cyan, name);
 	}
 }

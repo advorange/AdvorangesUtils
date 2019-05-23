@@ -43,7 +43,7 @@ namespace AdvorangesUtils.Tests
 		private (long Ticks, T Value)[] TestSpeeds<T>(Func<T> func, Action doBefore = null, int runs = 5)
 		{
 			var info = new (long Ticks, T Value)[runs];
-			for (int i = 0; i < runs; ++i)
+			for (var i = 0; i < runs; ++i)
 			{
 				doBefore?.Invoke();
 				var sw = new Stopwatch();

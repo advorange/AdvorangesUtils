@@ -19,11 +19,11 @@ namespace AdvorangesUtils.Tests
 			Assert.IsTrue("ABC".CaseInsContains("A"));
 			Assert.IsFalse("ABC".CaseInsContains("Q"));
 
-			Assert.IsTrue("ABC".CaseInsIndexOf("b", out int firstPos));
+			Assert.IsTrue("ABC".CaseInsIndexOf("b", out var firstPos));
 			Assert.AreEqual(1, firstPos);
-			Assert.IsTrue("ABC".CaseInsIndexOf("C", out int secondPos));
+			Assert.IsTrue("ABC".CaseInsIndexOf("C", out var secondPos));
 			Assert.AreEqual(2, secondPos);
-			Assert.IsFalse("ABC".CaseInsIndexOf("Q", out int thirdPos));
+			Assert.IsFalse("ABC".CaseInsIndexOf("Q", out var thirdPos));
 			Assert.AreEqual(-1, thirdPos);
 
 			Assert.IsTrue("ABC".CaseInsStartsWith("a"));
@@ -51,7 +51,7 @@ namespace AdvorangesUtils.Tests
 			var valid = new StringBuilder();
 			var invalid = new StringBuilder();
 			var random = new Random();
-			for (int i = 0; i < 50; ++i)
+			for (var i = 0; i < 50; ++i)
 			{
 				valid.Append((char)random.Next(33, 1000));
 				invalid.Append((char)random.Next(1001, 50000));
@@ -88,7 +88,7 @@ namespace AdvorangesUtils.Tests
 				"-Number",
 				"1",
 			};
-			for (int i = 0; i < split.Length; ++i)
+			for (var i = 0; i < split.Length; ++i)
 			{
 				Assert.AreEqual(expected[i], split[i]);
 			}
