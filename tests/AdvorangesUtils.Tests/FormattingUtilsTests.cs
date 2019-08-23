@@ -20,8 +20,8 @@ namespace AdvorangesUtils.Tests
 				"dog",
 			};
 
-			Assert.AreEqual("1fishdog", values.JoinNonNullValues("", x => x.ToString()));
-			Assert.AreEqual("1 fish dog", values.JoinNonNullValues(" ", x => x.ToString()));
+			Assert.AreEqual("1fishdog", values.NotNull().Join(x => x.ToString(), ""));
+			Assert.AreEqual("1 fish dog", values.NotNull().Join(x => x.ToString(), " "));
 		}
 		[TestMethod]
 		public void JoinNonNullStrings_Test()
@@ -38,8 +38,8 @@ namespace AdvorangesUtils.Tests
 				"dog",
 			};
 
-			Assert.AreEqual("dogfishdog", strings.JoinNonNullStrings(""));
-			Assert.AreEqual("dog fish dog", strings.JoinNonNullStrings(" "));
+			Assert.AreEqual("dogfishdog", strings.NotNull().Join(""));
+			Assert.AreEqual("dog fish dog", strings.NotNull().Join(" "));
 		}
 		[TestMethod]
 		public void JoinGeneric_Test()
@@ -51,8 +51,8 @@ namespace AdvorangesUtils.Tests
 				3,
 			};
 
-			Assert.AreEqual("123", values.Join("", x => x.ToString()));
-			Assert.AreEqual("1 2 3", values.Join(" ", x => x.ToString()));
+			Assert.AreEqual("123", values.Join(x => x.ToString(), ""));
+			Assert.AreEqual("1 2 3", values.Join(x => x.ToString(), " "));
 		}
 		[TestMethod]
 		public void Join_Test()

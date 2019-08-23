@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <Authors>Advorange</Authors>
     <Description>Utilities for things I'm writing.</Description>
     <RepositoryUrl>https://github.com/advorange/AdvorangesUtils</RepositoryUrl>
@@ -22,9 +22,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MetadataExtractor" Version="2.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
   </ItemGroup>
 
 </Project>

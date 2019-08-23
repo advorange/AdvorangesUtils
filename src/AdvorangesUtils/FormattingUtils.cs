@@ -12,41 +12,45 @@ namespace AdvorangesUtils
 	public static class FormattingUtils
 	{
 		/// <summary>
-		/// Joins all strings which are not null with the given string.
-		/// </summary>
-		/// <typeparam name="T">The type of arguments being passed in.</typeparam>
-		/// <param name="source">The strings to join.</param>
-		/// <param name="seperator">The value to join each string with.</param>
-		/// <param name="selector">How to convert each value to a string.</param>
-		/// <returns>All strings which were not null joined together.</returns>
-		public static string JoinNonNullValues<T>(this IEnumerable<T> source, string seperator, Func<T, string> selector)
-			=> source.SelectWhere(x => x != null, selector).JoinNonNullStrings(seperator);
-		/// <summary>
-		/// Joins all strings which are not null with the given string.
-		/// </summary>
-		/// <param name="source">The strings to join.</param>
-		/// <param name="seperator">The value to join each string with.</param>
-		/// <returns>All strings which were not null joined together.</returns>
-		public static string JoinNonNullStrings(this IEnumerable<string> source, string seperator)
-			=> source.Where(x => x != null).Join(seperator);
-		/// <summary>
-		/// Joins the strings together after selecting them.
+		/// Joins the strings together with <paramref name="separator"/> after selecting them.
 		/// </summary>
 		/// <typeparam name="T">The type of arguments being passed in.</typeparam>
 		/// <param name="source">The values to join.</param>
-		/// <param name="seperator">The value to join each string with.</param>
+		/// <param name="separator">The value to join each string with.</param>
 		/// <param name="selector">How to convert each value to a string.</param>
 		/// <returns>All strings joined together.</returns>
-		public static string Join<T>(this IEnumerable<T> source, string seperator, Func<T, string> selector)
-			=> source.Select(selector).Join(seperator);
+		public static string Join<T>(this IEnumerable<T> source, Func<T, string> selector, string separator)
+			=> source.Select(selector).Join(separator);
 		/// <summary>
-		/// Joins the strings together after selecting them.
+		/// Joins the strings together with <see cref="TextInfo.ListSeparator"/> from <see cref="CultureInfo.CurrentCulture"/> after selecting them.
+		/// </summary>
+		/// <typeparam name="T">The type of arguments being passed in.</typeparam>
+		/// <param name="source">The values to join.</param>
+		/// <param name="selector">How to convert each value to a string.</param>
+		/// <returns>All strings joined together.</returns>
+		public static string Join<T>(this IEnumerable<T> source, Func<T, string> selector)
+		{
+			var separator = CultureInfo.CurrentCulture.TextInfo.ListSeparator + " ";
+			return source.Join(selector, separator);
+		}
+		/// <summary>
+		/// Joins the strings together with <paramref name="separator"/>.
 		/// </summary>
 		/// <param name="source">The values to join.</param>
-		/// <param name="seperator">The value to join each string with.</param>
+		/// <param name="separator">The value to join each string with.</param>
 		/// <returns>All strings joined together.</returns>
-		public static string Join(this IEnumerable<string> source, string seperator)
-			=> string.Join(seperator, source);
+		public static string Join(this IEnumerable<string> source, string separator)
+			=> string.Join(separator, source);
+		/// <summary>
+		/// Joins the strings together with <see cref="TextInfo.ListSeparator"/> from <see cref="CultureInfo.CurrentCulture"/>.
+		/// </summary>
+		/// <param name="source">The values to join.</param>
+		/// <returns>All strings joined together.</returns>
+		public static string Join(this IEnumerable<string> source)
+		{
+			var separator = CultureInfo.CurrentCulture.TextInfo.ListSeparator + " ";
+			return source.Join(separator);
+		}
 		/// <summary>
 		/// Returns a string which is a numbered list of the passed in objects. The format is for the passed in arguments; the counter is added by default.
 		/// </summary>
@@ -152,12 +156,5 @@ namespace AdvorangesUtils
 			var month = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(utc.Month);
 			return $"{month} {utc.Day}, {utc.Year} at {utc.ToLongTimeString()}";
 		}
-		/// <summary>
-		/// Returns the passed in time as a human readable time and says how many days ago it was. Uses markdown.
-		/// </summary>
-		/// <param name="dt">The datetime to format.</param>
-		/// <returns>Formatted string that says when something was created with markdown.</returns>
-		public static string ToCreatedAt(this DateTime dt)
-			=> $"**Created:** `{ToReadable(dt)}` (`{DateTime.UtcNow.Subtract(dt).TotalDays:0.00}` days ago)";
 	}
 }

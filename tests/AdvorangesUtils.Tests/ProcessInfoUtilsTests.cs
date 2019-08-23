@@ -21,7 +21,7 @@ namespace AdvorangesUtils.Tests
 		[TestMethod]
 		public void ThreadCount_Test()
 		{
-			void MakeNewThread() => new Thread(() => Thread.Sleep(5000)).Start();
+			static void MakeNewThread() => new Thread(() => Thread.Sleep(5000)).Start();
 			var runs = TestSpeeds(ProcessInfoUtils.GetThreadCount, MakeNewThread);
 		}
 		[TestMethod]
