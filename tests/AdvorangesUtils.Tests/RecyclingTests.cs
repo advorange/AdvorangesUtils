@@ -8,10 +8,7 @@ namespace AdvorangesUtils.Tests
 	{
 		[TestMethod]
 		public void Recycling_Test()
-		{
-			Assert.AreEqual(0, RecyclingUtils.MoveFile(CreateFile()));
-			//Assert.ThrowsException<InvalidOperationException>(() => RecyclingUtils.MoveFile(CreateFile(), true));
-		}
+			=> Assert.AreEqual(0, RecyclingUtils.MoveFile(CreateFile()));
 
 		private FileInfo CreateFile()
 		{

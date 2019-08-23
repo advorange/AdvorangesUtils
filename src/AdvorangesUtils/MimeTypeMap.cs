@@ -10,31 +10,28 @@ namespace MimeTypes
 {
 	public static class MimeTypeMap
 	{
-		private static readonly Lazy<IDictionary<string, string>> _mappings = new Lazy<IDictionary<string, string>>(BuildMappings);
-
-		private static IDictionary<string, string> BuildMappings()
+		private static readonly Lazy<IDictionary<string, string>> _Mappings = new Lazy<IDictionary<string, string>>(() =>
 		{
-			var mappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
-
-                #region Big freaking list of mime types
-            
-                // maps both ways,
-                // extension -> mime type
-                //   and
-                // mime type -> extension
-                //
-                // any mime types on left side not pre-loaded on right side, are added automatically
-                // some mime types can map to multiple extensions, so to get a deterministic mapping,
-                // add those to the dictionary specifcially
-                //
-                // combination of values from Windows 7 Registry and 
-                // from C:\Windows\System32\inetsrv\config\applicationHost.config
-                // some added, including .7z and .dat
-                //
-                // Some added based on http://www.iana.org/assignments/media-types/media-types.xhtml
-                // which lists mime types, but not extensions
-                //
-                {".323", "text/h323"},
+			var mappings = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+			{
+				#region Big freaking list of mime types
+				// maps both ways,
+				// extension -> mime type
+				//   and
+				// mime type -> extension
+				//
+				// any mime types on left side not pre-loaded on right side, are added automatically
+				// some mime types can map to multiple extensions, so to get a deterministic mapping,
+				// add those to the dictionary specifcially
+				//
+				// combination of values from Windows 7 Registry and 
+				// from C:\Windows\System32\inetsrv\config\applicationHost.config
+				// some added, including .7z and .dat
+				//
+				// Some added based on http://www.iana.org/assignments/media-types/media-types.xhtml
+				// which lists mime types, but not extensions
+				//
+				{".323", "text/h323"},
 				{".3g2", "video/3gpp2"},
 				{".3gp", "video/3gpp"},
 				{".3gp2", "video/3gpp2"},
@@ -570,7 +567,7 @@ namespace MimeTypes
 				{".webarchive", "application/x-safari-webarchive"},
 				{".webm", "video/webm"},
 				{".webp", "image/webp"}, /* https://en.wikipedia.org/wiki/WebP */
-                {".webtest", "application/xml"},
+				{".webtest", "application/xml"},
 				{".wiq", "application/xml"},
 				{".wiz", "application/msword"},
 				{".wks", "application/vnd.ms-works"},
@@ -660,7 +657,7 @@ namespace MimeTypes
 				{"application/x-zip-compressed", ".zip"},
 				{"application/xhtml+xml", ".xhtml"},
 				{"application/xml", ".xml"},  // anomoly, .xml -> text/xml, but application/xml -> many thingss, but all are xml, so safest is .xml
-                {"audio/aac", ".AAC"},
+				{"audio/aac", ".AAC"},
 				{"audio/aiff", ".aiff"},
 				{"audio/basic", ".snd"},
 				{"audio/mid", ".midi"},
@@ -691,66 +688,52 @@ namespace MimeTypes
 				{"video/x-la-asf", ".lsf"},
 				{"video/x-ms-asf", ".asf"},
 				{"x-world/x-vrml", ".xof"},
+				#endregion
+			};
 
-                #endregion
-
-                };
-
-			foreach (var mapping in mappings.ToList()) // need ToList() to avoid modifying while still enumerating
+			foreach (var mapping in mappings.ToList()) // Need ToList() to avoid modifying while still enumerating
 			{
 				if (!mappings.ContainsKey(mapping.Value))
 				{
 					mappings.Add(mapping.Value, mapping.Key);
 				}
 			}
-
 			return mappings;
-		}
+		});
 
 		public static string GetMimeType(string extension)
 		{
 			if (extension == null)
 			{
-				throw new ArgumentNullException("extension");
+				throw new ArgumentNullException(nameof(extension));
 			}
-
-			if (!extension.StartsWith("."))
+			else if (!extension.StartsWith("."))
 			{
 				extension = "." + extension;
 			}
-
-			return _mappings.Value.TryGetValue(extension, out string mime) ? mime : "application/octet-stream";
+			return _Mappings.Value.TryGetValue(extension, out var mime) ? mime : "application/octet-stream";
 		}
-
 		public static string GetExtension(string mimeType)
-		{
-			return GetExtension(mimeType, true);
-		}
-
+			=> GetExtension(mimeType, true);
 		public static string GetExtension(string mimeType, bool throwErrorIfNotFound)
 		{
 			if (mimeType == null)
 			{
-				throw new ArgumentNullException("mimeType");
+				throw new ArgumentNullException(nameof(mimeType));
 			}
-
-			if (mimeType.StartsWith("."))
+			else if (mimeType.StartsWith("."))
 			{
-				throw new ArgumentException("Requested mime type is not valid: " + mimeType);
+				throw new ArgumentException($"Requested mime type is not valid: {mimeType}");
 			}
-
-			if (_mappings.Value.TryGetValue(mimeType, out string extension))
+			else if (_Mappings.Value.TryGetValue(mimeType, out var extension))
 			{
 				return extension;
 			}
-			if (throwErrorIfNotFound)
+			else if (throwErrorIfNotFound)
 			{
-				throw new ArgumentException("Requested mime type is not registered: " + mimeType);
+				throw new ArgumentException($"Requested mime type is not registered: {mimeType}");
 			}
-			else
-			{
-				return string.Empty;
-			}
+			return string.Empty;
 		}
 	}
 }
